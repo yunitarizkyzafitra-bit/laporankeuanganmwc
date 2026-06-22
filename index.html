@@ -3,18 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>March Summary - Live Kas Sheets</title>
+    <title>Premium Dashboard - Cash Flow Management</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <style>
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: '-apple-system', BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: 'Inter', sans-serif;
         }
 
         body {
-            background-color: #E6FA41; /* Hijau lime sesuai gambar */
-            color: #000000;
+            background-color: #0B0F19; /* Latar Belakang Gelap Mewah Cyber-Dark */
+            color: #FFFFFF;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -26,223 +28,398 @@
             max-width: 412px;
             height: 100vh;
             max-height: 850px;
-            background-color: #E6FA41;
-            padding: 24px;
+            background-color: #0F172A; /* Panel Slate Gelap */
+            padding: 28px;
             display: flex;
             flex-direction: column;
             position: relative;
             overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
+        /* --- HALAMAN LOGIN MEWAH --- */
+        #login-screen {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #0F172A;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 40px;
+            transition: all 0.5s ease;
+        }
+
+        .login-logo {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .login-logo span {
+            font-size: 64px;
+            color: #E6FA41; /* Aksen Lime Neon Mewah */
+        }
+
+        .login-title {
+            font-size: 28px;
+            font-weight: 800;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+
+        .login-subtitle {
+            font-size: 14px;
+            color: #94A3B8;
+            margin-bottom: 32px;
+        }
+
+        .input-password-container {
+            position: relative;
+            margin-bottom: 24px;
+        }
+
+        .input-password-container input {
+            width: 100%;
+            padding: 16px 50px 16px 16px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            color: #FFF;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .input-password-container input:focus {
+            border-color: #E6FA41;
+            background: rgba(255, 255, 255, 0.07);
+        }
+
+        .toggle-password-icon {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94A3B8;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .btn-login {
+            background-color: #E6FA41;
+            color: #0F172A;
+            border: none;
+            padding: 16px;
+            border-radius: 16px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 10px 20px -5px rgba(230, 250, 65, 0.3);
+        }
+
+        .error-msg {
+            color: #EF4444;
+            font-size: 13px;
+            margin-top: 12px;
+            text-align: center;
+            display: none;
+        }
+
+        /* --- DASHBOARD UTAMA MEWAH --- */
         .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 24px;
+            margin-bottom: 28px;
         }
 
-        .avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background-color: rgba(0,0,0,0.1);
+        .welcome-text {
+            font-size: 13px;
+            color: #94A3B8;
+        }
+
+        .status-badge {
             display: flex;
             align-items: center;
-            justify-content: center;
-            font-weight: bold;
+            gap: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            background: rgba(34, 197, 94, 0.1);
+            padding: 6px 12px;
+            border-radius: 20px;
+            color: #4ADE80;
         }
 
         .title {
-            font-size: 38px;
+            font-size: 34px;
             font-weight: 800;
             line-height: 1.1;
             margin-bottom: 28px;
+            letter-spacing: -1px;
         }
 
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-            margin-bottom: 16px;
+            gap: 14px;
+            margin-bottom: 20px;
         }
 
         .stat-card {
-            background-color: rgba(255, 255, 255, 0.4);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
             border-radius: 20px;
             padding: 16px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            height: 95px;
+            height: 100px;
         }
 
         .card-top {
-            display: flex;
-            justify-content: space-between;
-            color: rgba(0,0,0,0.6);
+            color: #94A3B8;
             font-size: 12px;
             font-weight: 600;
         }
 
         .card-value {
-            font-size: 18px;
+            font-size: 17px;
             font-weight: 700;
+            letter-spacing: -0.5px;
         }
 
+        /* Card Total Kas Utama Menghadap ke Atas (Melayang Elit) */
         .main-cash-card {
-            background-color: #FFFFFF;
-            border-radius: 24px;
-            padding: 24px;
+            background: #E6FA41; /* Latar belakang lime cerah eksklusif */
+            color: #0F172A;
+            border-radius: 28px;
+            padding: 28px;
             margin-top: auto;
-            margin-bottom: 16px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+            box-shadow: 0 20px 40px -15px rgba(230, 250, 65, 0.25);
         }
 
         .efficiency-percentage {
-            font-size: 54px;
+            font-size: 56px;
             font-weight: 300;
-            letter-spacing: -1px;
+            letter-spacing: -2px;
+            line-height: 1;
         }
 
         .sub-text {
-            color: rgba(0,0,0,0.5);
+            color: rgba(15, 23, 42, 0.6);
             font-size: 13px;
-            margin-top: 4px;
-            margin-bottom: 16px;
+            margin-top: 6px;
+            margin-bottom: 20px;
+            font-weight: 500;
         }
 
         .divider {
             height: 1px;
-            background-color: rgba(0,0,0,0.1);
-            margin-bottom: 16px;
+            background-color: rgba(15, 23, 42, 0.1);
+            margin-bottom: 18px;
         }
 
         .cash-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-weight: 700;
-            font-size: 16px;
+        }
+
+        .cash-row span:first-child {
+            font-weight: 800;
+            font-size: 14px;
+            letter-spacing: 1px;
+        }
+
+        .cash-row span:last-child {
+            font-size: 22px;
+            font-weight: 800;
         }
 
         .btn-input {
-            background-color: #000000;
-            color: #FFFFFF;
+            background-color: #FFFFFF;
+            color: #0F172A;
             width: 100%;
             border: none;
             padding: 18px;
-            border-radius: 30px;
+            border-radius: 20px;
             font-size: 16px;
             font-weight: 700;
             cursor: pointer;
+            box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
         }
 
-        /* Modal Form */
+        /* Form Modal Mewah */
         .modal {
             display: none;
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(0,0,0,0.5);
+            background-color: rgba(11, 15, 25, 0.8);
+            backdrop-filter: blur(8px);
             justify-content: center; align-items: center;
-            z-index: 10;
+            z-index: 200;
         }
 
         .modal-content {
-            background-color: #FFFFFF;
-            padding: 24px;
-            border-radius: 24px;
+            background-color: #1E293B;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 28px;
+            border-radius: 28px;
             width: 90%; max-width: 360px;
         }
 
-        .form-group { margin-bottom: 12px; }
-        .form-group label { display: block; font-size: 12px; margin-bottom: 4px; font-weight: 600; }
-        .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #DDD; border-radius: 8px; }
-        .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
-        .btn-cancel { background-color: #EEE; border: none; padding: 12px; width: 50%; border-radius: 12px; font-weight: 600; cursor: pointer; }
-        .btn-submit { background-color: #000; color: #FFF; border: none; padding: 12px; width: 50%; border-radius: 12px; font-weight: 600; cursor: pointer; }
-        .loading-overlay { display: none; color: #000; font-weight: bold; text-align: center; margin-top: 10px; }
+        .modal-title {
+            font-size: 20px; font-weight: 800; margin-bottom: 20px;
+        }
+
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-size: 12px; margin-bottom: 6px; color: #94A3B8; font-weight: 600; }
+        .form-group input, .form-group select { 
+            width: 100%; padding: 12px; background: rgba(255,255,255,0.03); 
+            border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: #FFF; outline: none;
+        }
+        .form-group input:focus, .form-group select:focus { border-color: #E6FA41; }
+
+        .modal-actions { display: flex; gap: 12px; margin-top: 24px; }
+        .btn-cancel { background: rgba(255,255,255,0.05); color: #FFF; border: none; padding: 14px; width: 50%; border-radius: 14px; font-weight: 600; cursor: pointer; }
+        .btn-submit { background: #E6FA41; color: #0F172A; border: none; padding: 14px; width: 50%; border-radius: 14px; font-weight: 700; cursor: pointer; }
+        
+        .loading-text { display: none; text-align: center; font-size: 13px; color: #E6FA41; margin-top: 10px; font-weight: 600; }
     </style>
 </head>
 <body>
 
     <div class="app-container">
-        <div class="header">
-            <div class="avatar">P</div>
-            <div id="status-koneksi" style="font-size: 12px; font-weight: bold; color: #22c55e;">● Terhubung</div>
+        
+        <div id="login-screen">
+            <div class="login-logo">
+                <span class="material-icons-round">vps_guard</span>
+            </div>
+            <div class="login-title">Akses Aman</div>
+            <div class="login-subtitle">Masukkan kata sandi internal sistem.</div>
+            
+            <div class="input-password-container">
+                <input type="password" id="sys-password" placeholder="Kata Sandi">
+                <span class="material-icons-round toggle-password-icon" onclick="togglePasswordMata()">visibility</span>
+            </div>
+            
+            <button class="btn-login" onclick="validasiAksesMasuk()">Masuk Sistem</button>
+            <div class="error-msg" id="err-login">Kata sandi tidak sesuai!</div>
         </div>
 
-        <div class="title">March<br>summary</div>
+        <div class="header">
+            <div>
+                <div class="welcome-text">SISTEM INTEGRASI</div>
+                <div style="font-weight: 700; font-size: 15px; margin-top: 2px;">Premium Console</div>
+            </div>
+            <div class="status-badge" id="status-koneksi">
+                <span class="material-icons-round" style="font-size: 14px;">cloud_done</span> Terhubung
+            </div>
+        </div>
+
+        <div class="title">Financial<br>summary</div>
 
         <div class="stats-grid">
             <div class="stat-card">
-                <div class="card-top"><span>Total Masuk</span></div>
-                <div class="card-value" id="txt-masuk">Rp 0</div>
+                <div class="card-top">Total Pemasukan</div>
+                <div class="card-value" id="txt-masuk" style="color: #4ADE80;">Rp 0</div>
             </div>
             <div class="stat-card">
-                <div class="card-top"><span>Total Keluar</span></div>
-                <div class="card-value" id="txt-keluar">Rp 0</div>
+                <div class="card-top">Total Pengeluaran</div>
+                <div class="card-value" id="txt-keluar" style="color: #F87171;">Rp 0</div>
             </div>
             <div class="stat-card">
-                <div class="card-top"><span>Kategori Masuk</span></div>
-                <div class="card-value" style="font-size: 12px; color: #16a34a;">Pundi, Bazar, CFD...</div>
+                <div class="card-top">Kategori In</div>
+                <div class="card-value" style="font-size: 12px; color: #94A3B8; font-weight: 400;">Pundi, Bazar, CFD, Infaq...</div>
             </div>
             <div class="stat-card">
-                <div class="card-top"><span>Kategori Keluar</span></div>
-                <div class="card-value" style="font-size: 11px; color: #dc2626;">Sewa, Admin, Trans...</div>
+                <div class="card-top">Kategori Out</div>
+                <div class="card-value" style="font-size: 12px; color: #94A3B8; font-weight: 400;">Sewa, Admin, Transport...</div>
             </div>
         </div>
 
         <div class="main-cash-card">
             <div class="efficiency-percentage" id="txt-persen">0%</div>
-            <div class="sub-text">Efisiensi Kas Bersih Aktif</div>
+            <div class="sub-text">Efisiensi Margin Saldo Kas</div>
             <div class="divider"></div>
             <div class="cash-row">
-                <span>TOTAL KAS</span>
+                <span>TOTAL KAS AKTIF</span>
                 <span id="txt-total-kas">Rp 0</span>
             </div>
         </div>
 
-        <button class="btn-input" onclick="bukaModal()">Input Transaksi Baru</button>
-        <div class="loading-overlay" id="loading-text">Memproses ke Google Sheets...</div>
+        <button class="btn-input" onclick="bukaModal()">+ Tambah Transaksi</button>
+        <div class="loading-text" id="loading-text">Mengirim enkripsi data ke Google Sheets...</div>
     </div>
 
     <div class="modal" id="modalInput">
         <div class="modal-content">
-            <div class="modal-title" style="font-weight: bold; margin-bottom: 15px;">Tambah Transaksi</div>
+            <div class="modal-title">Transaksi Baru</div>
             <div class="form-group">
-                <label>Keterangan</label>
-                <input type="text" id="inp-ket" placeholder="Contoh: Pembayaran sewa alat">
+                <label>Deskripsi Keterangan</label>
+                <input type="text" id="inp-ket" placeholder="Contoh: Dana hasil kupon bazar">
             </div>
             <div class="form-group">
-                <label>Jenis Kas</label>
+                <label>Jenis Transaksi</label>
                 <select id="inp-jenis" onchange="sesuaikanKategori()">
                     <option value="Masuk">Masuk (Penerimaan)</option>
                     <option value="Keluar">Keluar (Pengeluaran)</option>
                 </select>
             </div>
             <div class="form-group">
-                <label>Kategori</label>
-                <select id="inp-kategori">
-                    </select>
+                <label>Kategori Finansial</label>
+                <select id="inp-kategori"></select>
             </div>
             <div class="form-group">
-                <label>Jumlah (Rp)</label>
+                <label>Nominal (Rp)</label>
                 <input type="number" id="inp-jumlah" placeholder="0">
             </div>
             <div class="modal-actions">
                 <button class="btn-cancel" onclick="tutupModal()">Batal</button>
-                <button class="btn-submit" onclick="kirimKeSheets()">Simpan ke Sheets</button>
+                <button class="btn-submit" onclick="kirimKeSheets()">Simpan Data</button>
             </div>
         </div>
     </div>
 
     <script>
-        // PENTING: GANTI DENGAN URL WEB APP GOOGLE APPS SCRIPT ANDA
+        // PENTING: SILAKAN UBAH KATA SANDI MASUK DI SINI
+        const KATA_SANDI_SISTEM = "admin123"; 
+
+        // PENTING: TEMPELKAN URL WEB APP GOOGLE APPS SCRIPT ANDA DI SINI
         const SPREADSHEET_API_URL = "https://script.google.com/macros/s/AKfycbxoT8t9txyYeBUeZAn8FeomsSt7Of0YuX8w0V3jdEPNRjtFa3v_CiH0Uiqo2RgsOKSpCQ/exec";
 
         const katMasuk = ["Pundi", "Bazar", "CFD", "Infaq", "Proposal", "Lainnya"];
         const katKeluar = ["Admin Bank", "Bayar sewa tempat", "Transportasi", "Sewa Alat", "Lainnya"];
+
+        // Fungsi Toggle Ikon Mata Password
+        function togglePasswordMata() {
+            const passwordInput = document.getElementById("sys-password");
+            const icon = document.querySelector(".toggle-password-icon");
+            
+            if (passwordInput.type === "password") {
+                passwordInput.type = "text";
+                icon.innerText = "visibility_off"; // Ganti ikon jadi mata dicoret
+            } else {
+                passwordInput.type = "password";
+                icon.innerText = "visibility"; // Kembalikan ke ikon mata terbuka
+            }
+        }
+
+        // Fungsi Validasi Akses Masuk
+        function validasiAksesMasuk() {
+            const inputPass = document.getElementById("sys-password").value;
+            if (inputPass === KATA_SANDI_SISTEM) {
+                document.getElementById("login-screen").style.opacity = "0";
+                setTimeout(() => {
+                    document.getElementById("login-screen").style.display = "none";
+                }, 500);
+                muatDataDashboard();
+            } else {
+                document.getElementById("err-login").style.display = "block";
+            }
+        }
 
         function sesuaikanKategori() {
             let jenis = document.getElementById('inp-jenis').value;
@@ -259,8 +436,9 @@
         function formatRupiah(angka) { return "Rp " + Number(angka).toLocaleString('id-ID'); }
 
         function muatDataDashboard() {
-            document.getElementById('status-koneksi').innerText = "● Memuat...";
-            document.getElementById('status-koneksi').style.color = "orange";
+            let status = document.getElementById('status-koneksi');
+            status.innerHTML = '<span class="material-icons-round" style="font-size:14px;">sync</span> Memuat...';
+            status.style.color = "#FBBF24"; status.style.background = "rgba(251,191,36,0.1)";
             
             fetch(SPREADSHEET_API_URL + "?aksi=baca")
                 .then(res => res.json())
@@ -272,18 +450,15 @@
                     let persen = data.total_masuk > 0 ? Math.round((data.total_kas / data.total_masuk) * 100) : 0;
                     document.getElementById('txt-persen').innerText = persen + "%";
                     
-                    document.getElementById('status-koneksi').innerText = "● Terhubung";
-                    document.getElementById('status-koneksi').style.color = "#22c55e";
+                    status.innerHTML = '<span class="material-icons-round" style="font-size:14px;">cloud_done</span> Terhubung';
+                    status.style.color = "#4ADE80"; status.style.background = "rgba(34,197,94,0.1)";
                 }).catch(e => {
-                    document.getElementById('status-koneksi').innerText = "● Gagal Sinkron";
-                    document.getElementById('status-koneksi').style.color = "red";
+                    status.innerHTML = '<span class="material-icons-round" style="font-size:14px;">cloud_off</span> Offline';
+                    status.style.color = "#F87171"; status.style.background = "rgba(248,113,113,0.1)";
                 });
         }
 
-        function bukaModal() { 
-            document.getElementById('modalInput').style.display = 'flex'; 
-            sesuaikanKategori();
-        }
+        function bukaModal() { document.getElementById('modalInput').style.display = 'flex'; sesuaikanKategori(); }
         function tutupModal() { document.getElementById('modalInput').style.display = 'none'; }
 
         function kirimKeSheets() {
@@ -292,7 +467,7 @@
             let kat = document.getElementById('inp-kategori').value;
             let jumlah = document.getElementById('inp-jumlah').value;
 
-            if(!ket || !jumlah) { alert("Mohon lengkapi data!"); return; }
+            if(!ket || !jumlah) { alert("Mohon isi semua data!"); return; }
 
             document.getElementById('loading-text').style.display = "block";
             tutupModal();
@@ -303,15 +478,11 @@
                 .then(res => res.json())
                 .then(hasil => {
                     document.getElementById('loading-text').style.display = "none";
-                    // Kosongkan form
                     document.getElementById('inp-ket').value = "";
                     document.getElementById('inp-jumlah').value = "";
-                    // Perbarui dashboard aplikasi
                     muatDataDashboard();
                 });
         }
-
-        window.onload = muatDataDashboard;
     </script>
 </body>
 </html>
