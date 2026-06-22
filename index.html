@@ -56,13 +56,11 @@
 <body>
 
     <div class="app-container">
-        <!-- Status Bar -->
         <div class="header">
             <div class="sys-title">Sistem Keuangan Publik</div>
             <div id="status-koneksi" class="status-badge status-offline">● Memeriksa...</div>
         </div>
 
-        <!-- Judul Laporan -->
         <div>
             <div class="main-title">Laporan Kas</div>
             <div class="sub-title-lembaga">Muslimah Wilayah Cabang Palu Selatan</div>
@@ -70,7 +68,6 @@
 
         <div id="banner-antrean" class="sync-banner">⏳ Ada data offline tersimpan! Menunggu internet untuk sinkronisasi...</div>
 
-        <!-- Dashboard Ringkasan -->
         <div class="stats-grid">
             <div class="stat-card"><div class="card-label">Total Pemasukan</div><div class="card-val" id="txt-masuk" style="color: #34d399;">Rp 0</div></div>
             <div class="stat-card"><div class="card-label">Total Pengeluaran</div><div class="card-val" id="txt-keluar" style="color: #f87171;">Rp 0</div></div>
@@ -82,27 +79,9 @@
             <div class="cash-row"><span>TOTAL KAS AKTIF</span><span id="txt-total-kas">Rp 0</span></div>
         </div>
 
-        <!-- PANEL LOGIN -->
         <div class="login-console" id="panel-login">
             <div class="logo-container">
-                <img src="<div class="login-console" id="panel-login">
-    <div class="logo-container">
-        <img src="" class="logo-img" alt="Logo Lembaga" id="lembaga-logo">
-    </div>
-    <div class="console-title">🔑 Login Akses Pengurus</div>
-</div>
-
-<script>
-    // Sistem otomatis pengubah link Google Drive biasa menjadi Direct Link Gambar
-    window.addEventListener('DOMContentLoaded', () => {
-        let imgTag = document.getElementById('lembaga-logo');
-        let rawUrl = imgTag.getAttribute('src');
-        if (rawUrl.includes('drive.google.com')) {
-            let fileId = rawUrl.split('/d/')[1].split('/')[0];
-            imgTag.src = 'https://lh3.googleusercontent.com/d/' + fileId;
-        }
-    });
-</script>" alt="Logo Lembaga" id="lembaga-logo">
+                <img src="https://drive.google.com/file/d/1ldBk5da9Jazt2yerVijf1i74lIZZbc-L/view?usp=sharing" class="logo-img" alt="Logo Lembaga" id="lembaga-logo">
             </div>
             <div class="console-title">🔑 Login Akses Pengurus</div>
             <div class="form-row">
@@ -116,7 +95,6 @@
             <button class="btn-submit" style="background-color: #e6fa41;" onclick="prosesLogin()">Masuk Sistem</button>
         </div>
 
-        <!-- PANEL FORM INPUT -->
         <div class="input-console" id="panel-input" style="display: none;">
             <div class="console-title">📝 Input Data Ter-Breakdown</div>
             <div class="form-row">
@@ -146,7 +124,6 @@
             <div class="loading-text" id="loading-txt">Memproses penyimpanan...</div>
         </div>
 
-        <!-- PANEL TABEL RIWAYAT TRANSAKSI -->
         <div class="history-console" id="panel-history" style="display: none;">
             <div class="console-title">📋 Riwayat Kas & Bukti Gambar</div>
             <div class="table-responsive">
@@ -161,19 +138,15 @@
                         </tr>
                     </thead>
                     <tbody id="tabel-body">
-                        <!-- Memuat otomatis -->
-                    </tbody>
+                        </tbody>
                 </table>
             </div>
         </div>
     </div>
 
     <script>
-        // =========================================================================
-        // PENTING: GANTI TEKS DI BAWAH INI DENGAN LINK WEB APP APPS SCRIPT ANDA
-        // =========================================================================
-        const SPREADSHEET_API_URL = "https://script.google.com/macros/s/AKfycbzn9OLOHZcCt5rVztTHMI4di3Srmp6670OpjSXI2pLR32XLuaEWU0J2N1XbhelgK9FcXg/exec";
-        // =========================================================================
+        // URL APPS SCRIPT ANDA SUDAH DITANAM SECARA OTOMATIS DI SINI
+        const SPREADSHEET_API_URL = "https://script.google.com/macros/s/AKfycbzn9OLOHZccTs5rVztTHMl4di3Srmp6670OpjSXI2pLR32XLuaEWU0J2N1XbhelgK9FcXg/exec";
 
         const kategoriMasuk = ["Pundi", "Bazar", "CFD", "Infaq", "Proposal", "Lainnya"];
         const kategoriKeluar = ["Admin Bank", "Bayar sewa tempat", "Transportasi", "Sewa Alat", "Lainnya"];
@@ -201,7 +174,6 @@
 
         function formatRupiah(angka) { return "Rp " + Number(angka).toLocaleString('id-ID'); }
 
-        // Indikator Sinyal Offline / Online
         function updateIndikatorSinyal() {
             let statusBadge = document.getElementById('status-koneksi');
             if (navigator.onLine) {
@@ -216,13 +188,11 @@
         window.addEventListener('online', updateIndikatorSinyal);
         window.addEventListener('offline', updateIndikatorSinyal);
 
-        // Muat Data Utama dari Google Sheets
         function muatDashboard() {
-            if (!navigator.onLine || SPREADSHEET_API_URL === "https://script.google.com/macros/s/AKfycbzn9OLOHZcCt5rVztTHMI4di3Srmp6670OpjSXI2pLR32XLuaEWU0J2N1XbhelgK9FcXg/exec") {
+            if (!navigator.onLine) {
                 renderTabelCampuran();
                 return;
             }
-            
             fetch(SPREADSHEET_API_URL + "?aksi=baca")
                 .then(res => res.json())
                 .then(data => {
@@ -231,7 +201,6 @@
                 }).catch(() => { renderTabelCampuran(); });
         }
 
-        // Render data gabungan server + antrean offline
         function renderTabelCampuran() {
             let tbody = document.getElementById('tabel-body');
             tbody.innerHTML = "";
@@ -245,12 +214,10 @@
             const store = tx.objectStore("antrean_kas");
             store.getAll().onsuccess = function(e) {
                 let antrean = e.target.result;
-                
                 antrean.forEach(item => {
                     let jml = Number(item.jumlah);
                     if (item.jenis === "Masuk") totalMasuk += jml;
                     if (item.jenis === "Keluar") totalKeluar += jml;
-                    
                     semuaRiwayat.unshift({
                         "keterangan": "[OFFLINE] " + item.keterangan,
                         "kategori": item.kategori,
@@ -272,18 +239,11 @@
                         let tr = document.createElement('tr');
                         let isPending = row.bukti === "pending";
                         let badgeClass = isPending ? "badge-jenis bg-pending" : (row.jenis === "Masuk" ? "badge-jenis bg-masuk" : "badge-jenis bg-keluar");
-                        
                         let kolomBukti = isPending 
                             ? `<span style="color:#facc15; font-style:italic;">Menunggu Sinyal</span>`
                             : ((row.bukti && row.bukti.startsWith("http")) ? `<a href="${row.bukti}" target="_blank" class="btn-view">Lihat Foto</a>` : `<span class="no-img">Tidak ada</span>`);
 
-                        tr.innerHTML = `
-                            <td>${row.keterangan}</td>
-                            <td>${row.kategori}</td>
-                            <td><span class="${badgeClass}">${isPending ? "Pending" : row.jenis}</span></td>
-                            <td>${formatRupiah(row.jumlah)}</td>
-                            <td>${kolomBukti}</td>
-                        `;
+                        tr.innerHTML = `<td>${row.keterangan}</td><td>${row.kategori}</td><td><span class="${badgeClass}">${isPending ? "Pending" : row.jenis}</span></td><td>${formatRupiah(row.jumlah)}</td><td>${kolomBukti}</td>`;
                         tbody.appendChild(tr);
                     });
                 } else {
@@ -295,24 +255,11 @@
         function prosesLogin() {
             let user = document.getElementById('log-user').value.trim();
             let pass = document.getElementById('log-pass').value.trim();
-            
-            if(!user) { alert("Masukkan Nama Pengurus!"); return; }
-            if(!pass) { alert("Masukkan Password!"); return; }
+            if(!user || !pass) { alert("Masukkan Nama Pengurus dan Password!"); return; }
 
-            if (SPREADSHEET_API_URL === "https://script.google.com/macros/s/AKfycbzn9OLOHZcCt5rVztTHMI4di3Srmp6670OpjSXI2pLR32XLuaEWU0J2N1XbhelgK9FcXg/exec") {
-                alert("Sistem belum dihubungkan. Anda harus mengganti teks 'https://script.google.com/macros/s/AKfycbzn9OLOHZcCt5rVztTHMI4di3Srmp6670OpjSXI2pLR32XLuaEWU0J2N1XbhelgK9FcXg/exec' di dalam kode dengan URL Apps Script Anda.");
-                return;
-            }
-
-            // Login darurat khusus saat offline total
             if (!navigator.onLine) {
-                if (user.toLowerCase() === "nur wati" && pass === "2026") {
-                    bukaAplikasi();
-                    return;
-                } else {
-                    alert("Aplikasi Offline: Gunakan nama 'Nur Wati' & pass '2026'!");
-                    return;
-                }
+                if (user.toLowerCase() === "nur wati" && pass === "2026") { bukaAplikasi(); return; } 
+                else { alert("Aplikasi Offline: Gunakan login darurat!"); return; }
             }
 
             fetch(`${SPREADSHEET_API_URL}?aksi=login&username=${encodeURIComponent(user)}&password=${encodeURIComponent(pass)}`)
@@ -367,7 +314,7 @@
                     bersihkanForm();
                     renderTabelCampuran();
                     cekAntreanOffline();
-                    alert("Aplikasi Offline. Transaksi aman tersimpan di HP, akan dikirim otomatis saat ada sinyal!");
+                    alert("Aplikasi Offline. Data tersimpan di HP!");
                 };
             } else {
                 eksekusiKirimPOST(data, () => {
@@ -401,26 +348,21 @@
         }
 
         function sinkronisasiDataKeServer() {
-            if (!db || SPREADSHEET_API_URL === "https://script.google.com/macros/s/AKfycbzn9OLOHZcCt5rVztTHMI4di3Srmp6670OpjSXI2pLR32XLuaEWU0J2N1XbhelgK9FcXg/exec") return;
+            if (!db) return;
             const tx = db.transaction("antrean_kas", "readwrite");
             const store = tx.objectStore("antrean_kas");
-            
             store.openCursor().onsuccess = function(e) {
                 let cursor = e.target.result;
                 if (cursor) {
                     let dataOffline = cursor.value;
                     let recordKey = cursor.key;
-
                     fetch(SPREADSHEET_API_URL, { method: "POST", body: JSON.stringify(dataOffline) })
                         .then(res => res.json())
                         .then(hasil => {
                             if (hasil.status === "sukses") {
                                 const deleteTx = db.transaction("antrean_kas", "readwrite");
                                 deleteTx.objectStore("antrean_kas").delete(recordKey);
-                                deleteTx.oncomplete = function() {
-                                    cekAntreanOffline();
-                                    muatDashboard();
-                                };
+                                deleteTx.oncomplete = function() { cekAntreanOffline(); muatDashboard(); };
                             }
                         });
                     cursor.continue();
@@ -428,10 +370,17 @@
             };
         }
 
-        window.onload = () => { 
-            updateIndikatorSinyal(); 
-            muatDashboard();
-        };
+        // Otomatisasi pengubah Link Google Drive menjadi Direct Image Link
+        window.addEventListener('DOMContentLoaded', () => {
+            let imgTag = document.getElementById('lembaga-logo');
+            let rawUrl = imgTag.getAttribute('src');
+            if (rawUrl && rawUrl.includes('drive.google.com')) {
+                let fileId = rawUrl.split('/folders/')[1] ? rawUrl.split('/folders/')[1].split('?')[0] : rawUrl.split('/d/')[1].split('/')[0];
+                imgTag.src = 'https://drive.google.com/uc?export=view&id=' + fileId;
+            }
+        });
+
+        window.onload = () => { updateIndikatorSinyal(); muatDashboard(); };
     </script>
 </body>
 </html>
