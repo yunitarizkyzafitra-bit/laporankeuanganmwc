@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Laporan Kas Muslimah Wilayah Cabang Palu Selatan</title>
+    <title>Laporan Kas Terintegrasi - Muslimah Palu Selatan</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: '-apple-system', BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
         body { background-color: #0b0f19; color: #ffffff; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 10px; }
@@ -34,18 +34,15 @@
         .form-row label { display: block; font-size: 11px; color: #94a3b8; margin-bottom: 4px; font-weight: 600; }
         .form-row input, .form-row select { width: 100%; padding: 11px; background: #111827; border: 1px solid #374151; border-radius: 10px; color: #ffffff; font-size: 13px; }
         
-        /* Style Tambahan untuk Toggle Mata Password */
         .password-container { position: relative; width: 100%; }
         .password-container input { padding-right: 40px; }
         .toggle-password { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #94a3b8; font-size: 16px; user-select: none; }
-        .toggle-password:hover { color: #ffffff; }
         
         .btn-submit { background-color: #ffffff; color: #000000; width: 100%; border: none; padding: 14px; border-radius: 14px; font-size: 14px; font-weight: 700; cursor: pointer; margin-top: 8px; }
         .loading-text { display: none; text-align: center; font-size: 12px; color: #e6fa41; margin-top: 10px; font-weight: 600; }
-        .sync-banner { display: none; background: #3b82f6; color: white; padding: 8px; text-align: center; font-size: 11px; font-weight: bold; border-radius: 10px; margin-bottom: 10px; }
 
         .logo-container { width: 100%; display: flex; justify-content: center; align-items: center; margin-bottom: 15px; background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.1); border-radius: 20px; padding: 15px; min-height: 110px; }
-        .logo-img { max-width: 100px; max-height: 100px; object-fit: contain; }
+        .logo-img { max-width: 100%; max-height: 90px; object-fit: contain; }
 
         .table-responsive { width: 100%; overflow-x: auto; margin-top: 8px; border-radius: 12px; }
         table { width: 100%; border-collapse: collapse; text-align: left; font-size: 12px; }
@@ -54,29 +51,22 @@
         .badge-jenis { padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; }
         .bg-masuk { background-color: rgba(34,197,94,0.2); color: #4ade80; }
         .bg-keluar { background-color: rgba(239,68,68,0.2); color: #f87171; }
-        .bg-pending { background-color: rgba(234,179,8,0.2); color: #facc15; }
         .btn-view { background-color: #e6fa41; color: #000; padding: 2px 8px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 11px; }
-        .no-img { color: #64748b; font-style: italic; }
     </style>
 </head>
 <body>
 
     <div class="app-container">
-        <!-- Status Bar -->
         <div class="header">
             <div class="sys-title">Sistem Keuangan Publik</div>
             <div id="status-koneksi" class="status-badge status-offline">● Memeriksa...</div>
         </div>
 
-        <!-- Judul Laporan -->
         <div>
             <div class="main-title">Laporan Kas</div>
             <div class="sub-title-lembaga">Muslimah Wilayah Cabang Palu Selatan</div>
         </div>
 
-        <div id="banner-antrean" class="sync-banner">⏳ Ada data offline tersimpan! Menunggu internet untuk sinkronisasi...</div>
-
-        <!-- Dashboard Ringkasan -->
         <div class="stats-grid">
             <div class="stat-card"><div class="card-label">Total Pemasukan</div><div class="card-val" id="txt-masuk" style="color: #34d399;">Rp 0</div></div>
             <div class="stat-card"><div class="card-label">Total Pengeluaran</div><div class="card-val" id="txt-keluar" style="color: #f87171;">Rp 0</div></div>
@@ -88,16 +78,14 @@
             <div class="cash-row"><span>TOTAL KAS AKTIF</span><span id="txt-total-kas">Rp 0</span></div>
         </div>
 
-        <!-- PANEL LOGIN + AREA LOGO LEMBAGA -->
         <div class="login-console" id="panel-login">
             <div class="logo-container">
-                <!-- LOGO LANGSUNG MEMANGGIL FILE DI REPOSITORI GITHUB ANDA -->
-                <img src="kop palu selatan.png" class="logo-img" alt="Logo Lembaga" id="lembaga-logo">
+                <img src="kop%20palu%20selatan.png" class="logo-img" alt="Logo Lembaga" id="lembaga-logo">
             </div>
             <div class="console-title">🔑 Login Akses Pengurus</div>
             <div class="form-row">
                 <label>Nama Pengurus</label>
-                <input type="text" id="log-user" placeholder="Masukkan Nama Lengkap Anda">
+                <input type="text" id="log-user" placeholder="Nama Lengkap">
             </div>
             <div class="form-row">
                 <label>Kata Sandi (Password)</label>
@@ -109,9 +97,8 @@
             <button class="btn-submit" style="background-color: #e6fa41;" onclick="prosesLogin()">Masuk Sistem</button>
         </div>
 
-        <!-- PANEL FORM INPUT -->
         <div class="input-console" id="panel-input" style="display: none;">
-            <div class="console-title">📝 Input Data Ter-Breakdown</div>
+            <div class="console-title">📝 Input Data Keuangan terbaru</div>
             <div class="form-row">
                 <label>Jenis Aliran Kas</label>
                 <select id="inp-jenis" onchange="breakdownKategori()">
@@ -132,14 +119,13 @@
                 <input type="number" id="inp-jumlah" placeholder="0">
             </div>
             <div class="form-row">
-                <label>Upload Bukti Gambar Nota/Kuitansi</label>
+                <label>Upload Bukti Nota (Otomatis ke Google Drive)</label>
                 <input type="file" id="inp-file" accept="image/*" style="background: transparent; border: none; padding: 5px 0;">
             </div>
             <button class="btn-submit" onclick="kirimKeSheets()">Simpan Transaksi</button>
-            <div class="loading-text" id="loading-txt">Memproses penyimpanan...</div>
+            <div class="loading-text" id="loading-txt">Memproses dan Mengunggah Bukti ke Drive...</div>
         </div>
 
-        <!-- PANEL TABEL RIWAYAT TRANSAKSI -->
         <div class="history-console" id="panel-history" style="display: none;">
             <div class="console-title">📋 Riwayat Kas & Bukti Gambar</div>
             <div class="table-responsive">
@@ -150,28 +136,25 @@
                             <th>Kategori</th>
                             <th>Jenis</th>
                             <th>Jumlah</th>
-                            <th>Bukti</th>
+                            <th>Bukti Drive</th>
                         </tr>
                     </thead>
                     <tbody id="tabel-body">
-                        <!-- Memuat otomatis -->
-                    </tbody>
+                        </tbody>
                 </table>
             </div>
         </div>
     </div>
 
     <script>
-        // URL Backend Apps Script Utama Anda
-        const SPREADSHEET_API_URL = "https://script.google.com/macros/s/AKfycbwy1OMsP0r1irbcUVaTeT8zmYohX6-ivRHJg87FHposGyAnN_QQ2M7xEnCjikfGFe2ucw/exec";
+        // URL Apps Script Web App Terintegrasi Anda
+        const SPREADSHEET_API_URL = "https://script.google.com/macros/s/AKfycbzn9OLOHZccTs5rVztTHMl4di3Srmp6670OpjSXI2pLR32XLuaEWU0J2N1XbhelgK9FcXg/exec";
 
         const kategoriMasuk = ["Pundi", "Bazar", "CFD", "Infaq", "Proposal", "Lainnya"];
         const kategoriKeluar = ["Admin Bank", "Bayar sewa tempat", "Transportasi", "Sewa Alat", "Lainnya"];
         
-        let db;
         let dataServerTerakhir = null;
 
-        // Fungsi Toggle Lihat/Sembunyikan Kata Sandi
         function togglePasswordAkses() {
             let passInput = document.getElementById('log-pass');
             let toggleIcon = document.getElementById('btn-toggle-pass');
@@ -183,14 +166,6 @@
                 toggleIcon.innerText = "👁️";
             }
         }
-
-        // Inisialisasi Database Lokal Browser (IndexedDB)
-        const request = indexedDB.open("KasOfflineDB", 1);
-        request.onupgradeneeded = function(e) {
-            db = e.target.result;
-            db.createObjectStore("antrean_kas", { keyPath: "id", autoIncrement: true });
-        };
-        request.onsuccess = function(e) { db = e.target.result; cekAntreanOffline(); };
 
         function breakdownKategori() {
             let jenis = document.getElementById('inp-jenis').value;
@@ -209,88 +184,48 @@
             if (navigator.onLine) {
                 statusBadge.innerText = "● Online";
                 statusBadge.className = "status-badge status-online";
-                sinkronisasiDataKeServer();
+                muatDashboard();
             } else {
-                statusBadge.innerText = "● Offline (Mode Lokal)";
+                statusBadge.innerText = "● Offline";
                 statusBadge.className = "status-badge status-offline";
             }
         }
-        window.addEventListener('online', updateIndikatorSinyal);
-        window.addEventListener('offline', updateIndikatorSinyal);
 
         function muatDashboard() {
-            if (!navigator.onLine) {
-                renderTabelCampuran();
-                return;
-            }
             fetch(SPREADSHEET_API_URL + "?aksi=baca")
                 .then(res => res.json())
                 .then(data => {
                     dataServerTerakhir = data;
-                    renderTabelCampuran();
-                }).catch(() => { renderTabelCampuran(); });
+                    renderTabel();
+                }).catch(() => {});
         }
 
-        function renderTabelCampuran() {
+        function renderTabel() {
+            if(!dataServerTerakhir) return;
             let tbody = document.getElementById('tabel-body');
             tbody.innerHTML = "";
 
-            let totalMasuk = dataServerTerakhir ? dataServerTerakhir.total_masuk : 0;
-            let totalKeluar = dataServerTerakhir ? dataServerTerakhir.total_keluar : 0;
-            let semuaRiwayat = dataServerTerakhir ? [...dataServerTerakhir.riwayat] : [];
+            document.getElementById('txt-masuk').innerText = formatRupiah(dataServerTerakhir.total_masuk);
+            document.getElementById('txt-keluar').innerText = formatRupiah(dataServerTerakhir.total_keluar);
+            let totalKas = dataServerTerakhir.total_masuk - dataServerTerakhir.total_keluar;
+            document.getElementById('txt-total-kas').innerText = formatRupiah(totalKas);
+            let persen = dataServerTerakhir.total_masuk > 0 ? Math.round((totalKas / dataServerTerakhir.total_masuk) * 100) : 0;
+            document.getElementById('txt-persen').innerText = persen + "%";
 
-            if (!db) return;
-            const tx = db.transaction("antrean_kas", "readonly");
-            const store = tx.objectStore("antrean_kas");
-            store.getAll().onsuccess = function(e) {
-                let antrean = e.target.result;
-                antrean.forEach(item => {
-                    let jml = Number(item.jumlah);
-                    if (item.jenis === "Masuk") totalMasuk += jml;
-                    if (item.jenis === "Keluar") totalKeluar += jml;
-                    semuaRiwayat.unshift({
-                        "keterangan": "[OFFLINE] " + item.keterangan,
-                        "kategori": item.kategori,
-                        "jenis": item.jenis,
-                        "jumlah": jml,
-                        "bukti": "pending"
-                    });
-                });
+            dataServerTerakhir.riwayat.forEach(row => {
+                let tr = document.createElement('tr');
+                let badgeClass = row.jenis === "Masuk" ? "badge-jenis bg-masuk" : "badge-jenis bg-keluar";
+                let kolomBukti = (row.bukti && row.bukti.startsWith("http")) ? `<a href="${row.bukti}" target="_blank" class="btn-view">Lihat Nota</a>` : `<span>Tidak ada</span>`;
 
-                document.getElementById('txt-masuk').innerText = formatRupiah(totalMasuk);
-                document.getElementById('txt-keluar').innerText = formatRupiah(totalKeluar);
-                let totalKas = totalMasuk - totalKeluar;
-                document.getElementById('txt-total-kas').innerText = formatRupiah(totalKas);
-                let persen = totalMasuk > 0 ? Math.round((totalKas / totalMasuk) * 100) : 0;
-                document.getElementById('txt-persen').innerText = persen + "%";
-
-                if (semuaRiwayat.length > 0) {
-                    semuaRiwayat.forEach(row => {
-                        let tr = document.createElement('tr');
-                        let isPending = row.bukti === "pending";
-                        let badgeClass = isPending ? "badge-jenis bg-pending" : (row.jenis === "Masuk" ? "badge-jenis bg-masuk" : "badge-jenis bg-keluar");
-                        let kolomBukti = isPending 
-                            ? `<span style="color:#facc15; font-style:italic;">Menunggu Sinyal</span>`
-                            : ((row.bukti && row.bukti.startsWith("http")) ? `<a href="${row.bukti}" target="_blank" class="btn-view">Lihat Foto</a>` : `<span class="no-img">Tidak ada</span>`);
-
-                        tr.innerHTML = `<td>${row.keterangan}</td><td>${row.kategori}</td><td><span class="${badgeClass}">${isPending ? "Pending" : row.jenis}</span></td><td>${formatRupiah(row.jumlah)}</td><td>${kolomBukti}</td>`;
-                        tbody.appendChild(tr);
-                    });
-                } else {
-                    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#64748b;">Belum ada data kas</td></tr>`;
-                }
-            };
+                tr.innerHTML = `<td>${row.keterangan}</td><td>${row.kategori}</td><td><span class="${badgeClass}">${row.jenis}</span></td><td>${formatRupiah(row.jumlah)}</td><td>${kolomBukti}</td>`;
+                tbody.appendChild(tr);
+            });
         }
 
         function prosesLogin() {
             let user = document.getElementById('log-user').value.trim();
             let pass = document.getElementById('log-pass').value.trim();
             if(!user || !pass) { alert("Masukkan Nama Pengurus dan Password!"); return; }
-
-            if (!navigator.onLine) {
-                if (user.toLowerCase() === "nur wati" && pass === "2026") { bukaAplikasi(); return; } 
-                else { alert("Aplikasi Offline: Gunakan login darurat!"); return; }
-            }
 
             fetch(`${SPREADSHEET_API_URL}?aksi=login&username=${encodeURIComponent(user)}&password=${encodeURIComponent(pass)}`)
                 .then(res => res.json())
@@ -304,7 +239,6 @@
             document.getElementById('panel-input').style.display = "block";
             document.getElementById('panel-history').style.display = "block";
             breakdownKategori();
-            updateIndikatorSinyal();
             muatDashboard();
         }
 
@@ -327,80 +261,30 @@
                     objekData.fileData = splitData[1];
                     objekData.fileName = fileInput.name;
                     objekData.fileType = fileInput.type;
-                    simpanDataLokalAtauKirim(objekData);
+                    eksekusiPOST(objekData);
                 };
                 reader.readAsDataURL(fileInput);
             } else {
-                simpanDataLokalAtauKirim(objekData);
+                eksekusiPOST(objekData);
             }
         }
 
-        function simpanDataLokalAtauKirim(data) {
-            if (!navigator.onLine) {
-                const tx = db.transaction("antrean_kas", "readwrite");
-                tx.objectStore("antrean_kas").add(data);
-                tx.oncomplete = function() {
-                    document.getElementById('loading-txt').style.display = "none";
-                    bersihkanForm();
-                    renderTabelCampuran();
-                    cekAntreanOffline();
-                    alert("Aplikasi Offline. Data tersimpan di HP!");
-                };
-            } else {
-                eksekusiKirimPOST(data, () => {
-                    document.getElementById('loading-txt').style.display = "none";
-                    bersihkanForm();
-                    muatDashboard();
-                    alert("Transaksi berhasil disimpan secara Online!");
-                });
-            }
-        }
-
-        function eksekusiKirimPOST(data, callback) {
+        function eksekusiPOST(data) {
             fetch(SPREADSHEET_API_URL, { method: "POST", body: JSON.stringify(data) })
                 .then(res => res.json())
-                .then(hasil => { if(hasil.status === "sukses") callback(); });
+                .then(hasil => {
+                    document.getElementById('loading-txt').style.display = "none";
+                    if(hasil.status === "sukses") {
+                        document.getElementById('inp-ket').value = "";
+                        document.getElementById('inp-jumlah').value = "";
+                        document.getElementById('inp-file').value = "";
+                        muatDashboard();
+                        alert("Transaksi & Bukti Nota Berhasil Disimpan!");
+                    }
+                });
         }
 
-        function bersihkanForm() {
-            document.getElementById('inp-ket').value = "";
-            document.getElementById('inp-jumlah').value = "";
-            document.getElementById('inp-file').value = "";
-        }
-
-        function cekAntreanOffline() {
-            if (!db) return;
-            const tx = db.transaction("antrean_kas", "readonly");
-            tx.objectStore("antrean_kas").count().onsuccess = function(e) {
-                let jumlahAntrean = e.target.result;
-                document.getElementById('banner-antrean').style.display = jumlahAntrean > 0 ? "block" : "none";
-            };
-        }
-
-        function sinkronisasiDataKeServer() {
-            if (!db) return;
-            const tx = db.transaction("antrean_kas", "readwrite");
-            const store = tx.objectStore("antrean_kas");
-            store.openCursor().onsuccess = function(e) {
-                let cursor = e.target.result;
-                if (cursor) {
-                    let dataOffline = cursor.value;
-                    let recordKey = cursor.key;
-                    fetch(SPREADSHEET_API_URL, { method: "POST", body: JSON.stringify(dataOffline) })
-                        .then(res => res.json())
-                        .then(hasil => {
-                            if (hasil.status === "sukses") {
-                                const deleteTx = db.transaction("antrean_kas", "readwrite");
-                                deleteTx.objectStore("antrean_kas").delete(recordKey);
-                                deleteTx.oncomplete = function() { cekAntreanOffline(); muatDashboard(); };
-                            }
-                        });
-                    cursor.continue();
-                }
-            };
-        }
-
-        window.onload = () => { updateIndikatorSinyal(); muatDashboard(); };
+        window.onload = () => { updateIndikatorSinyal(); };
     </script>
 </body>
 </html>
