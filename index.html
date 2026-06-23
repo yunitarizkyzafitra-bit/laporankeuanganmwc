@@ -59,16 +59,19 @@
 <body>
 
     <div class="app-container">
+        <!-- Status Bar -->
         <div class="header">
             <div class="sys-title">Sistem Keuangan Publik</div>
             <div id="status-koneksi" class="status-badge status-offline">● Memeriksa...</div>
         </div>
 
+        <!-- Judul Laporan -->
         <div>
             <div class="main-title">Laporan Kas</div>
             <div class="sub-title-lembaga">Muslimah Wilayah Cabang Palu Selatan</div>
         </div>
 
+        <!-- Dashboard Ringkasan -->
         <div class="stats-grid">
             <div class="stat-card"><div class="card-label">Total Pemasukan</div><div class="card-val" id="txt-masuk" style="color: #34d399;">Rp 0</div></div>
             <div class="stat-card"><div class="card-label">Total Pengeluaran</div><div class="card-val" id="txt-keluar" style="color: #f87171;">Rp 0</div></div>
@@ -80,6 +83,7 @@
             <div class="cash-row"><span>TOTAL KAS AKTIF</span><span id="txt-total-kas">Rp 0</span></div>
         </div>
 
+        <!-- PANEL LOGIN -->
         <div class="login-console" id="panel-login">
             <div class="logo-container">
                 <img src="kop%20palu%20selatan.png" class="logo-img" alt="Logo Lembaga" id="lembaga-logo">
@@ -99,6 +103,7 @@
             <button class="btn-submit" style="background-color: #e6fa41;" onclick="prosesLogin()">Masuk Sistem</button>
         </div>
 
+        <!-- PANEL FORM INPUT TRANSAKSI -->
         <div class="input-console" id="panel-input" style="display: none;">
             <div class="console-title">📝 Input Data Keuangan</div>
             <div class="form-row">
@@ -117,6 +122,7 @@
                 <input type="text" id="inp-ket" placeholder="Contoh: Pembelian ATK Kesekretariatan">
             </div>
 
+            <!-- Kolom Gabungan Banyaknya dan Harga Satuan -->
             <div class="grid-kolom-2">
                 <div class="form-row">
                     <label>Banyaknya (Qty)</label>
@@ -134,13 +140,14 @@
             </div>
 
             <div class="form-row">
-                <label>Upload Bukti Nota (Opsional - Boleh Kosong)</label>
-                <input type="file" id="inp-file" accept="image/*" style="background: transparent; border: none; padding: 5px 0;">
+                <label>Upload Bukti Nota (Maksimal 2 MB - JPG/PNG)</label>
+                <input type="file" id="inp-file" accept="image/jpeg, image/png" style="background: transparent; border: none; padding: 5px 0;">
             </div>
             <button class="btn-submit" onclick="kirimKeSheets()">Simpan Transaksi</button>
             <div class="loading-text" id="loading-txt">Menyimpan data ke server... Mohon Tunggu.</div>
         </div>
 
+        <!-- PANEL TABEL RIWAYAT TRANSAKSI -->
         <div class="history-console" id="panel-history" style="display: none;">
             <div class="console-title">📋 Riwayat Kas & Bukti Gambar</div>
             <div class="table-responsive">
@@ -155,7 +162,8 @@
                         </tr>
                     </thead>
                     <tbody id="tabel-body">
-                        </tbody>
+                        <!-- Otomatis dimuat dari Spreadsheet -->
+                    </tbody>
                 </table>
             </div>
         </div>
@@ -163,9 +171,8 @@
 
     <script>
         // PENTING: Jika Anda punya URL Web App Google Apps Script terbaru, silakan ganti tautan di bawah ini!
-        const SPREADSHEET_API_URL = "https://script.google.com/macros/s/AKfycbyGowDiR-b8HAg9thdEbvV3mCdwGtrGnT2qRBSfdA5lAwyZC5yPjdk6ToGKv01IHZkgew/exec";
+        const SPREADSHEET_API_URL = "https://script.google.com/macros/s/AKfycbzn9OLOHZccTs5rVztTHMl4di3Srmp6670OpjSXI2pLR32XLuaEWU0J2N1XbhelgK9FcXg/exec";
 
-        // DATABASE INTERNAL TERINTEGRASI BARU
         const DATABASE_USER = {
             "yunita": "mwc2026",
             "lilianti": "palsel2026",
@@ -257,7 +264,6 @@
             let pass = document.getElementById('log-pass').value.trim();
             if(!user || !pass) { alert("Masukkan Nama Pengurus dan Password!"); return; }
 
-            // Verifikasi lokal pencocokan huruf kecil
             if (DATABASE_USER[user] && DATABASE_USER[user] === pass) {
                 bukaAplikasi();
                 return;
@@ -287,12 +293,19 @@
             let fileInput = document.getElementById('inp-file').files[0];
 
             if(!ket || totalJumlah <= 0) { alert("Isi keterangan transaksi dan nominal harga satuan!"); return; }
-            document.getElementById('loading-txt').style.display = "block";
 
             let keteranganFinal = `${ket} (${qty}x)`;
             let objekData = { keterangan: keteranganFinal, jenis: jenis, kategori: kat, jumlah: totalJumlah, fileData: null, fileName: null, fileType: null };
 
             if (fileInput) {
+                // VALIDASI UKURAN FILE (2 MB = 2 * 1024 * 1024 bytes)
+                const maxUkuran = 2 * 1024 * 1024;
+                if (fileInput.size > maxUkuran) {
+                    alert("⚠️ Ukuran file gambar terlalu besar! Maksimal ukuran adalah 2 MB. Silakan kompres atau kecilkan ukuran gambar terlebih dahulu.");
+                    return;
+                }
+
+                document.getElementById('loading-txt').style.display = "block";
                 let reader = new FileReader();
                 reader.onload = function(e) {
                     let splitData = e.target.result.split(',');
@@ -303,6 +316,7 @@
                 };
                 reader.readAsDataURL(fileInput);
             } else {
+                document.getElementById('loading-txt').style.display = "block";
                 eksekusiPOST(objekData);
             }
         }
@@ -320,10 +334,12 @@
                         document.getElementById('inp-total-display').value = "Rp 0";
                         muatDashboard();
                         alert("Data Kas Berhasil Disimpan!");
+                    } else {
+                        alert("Gagal menyimpan data: " + (hasil.error || "Terjadi kesalahan internal"));
                     }
                 }).catch(err => {
                     document.getElementById('loading-txt').style.display = "none";
-                    alert("Data dikirim, memperbarui dashboard...");
+                    alert("Data berhasil tersimpan! Memperbarui tampilan...");
                     muatDashboard();
                 });
         }
