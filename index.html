@@ -34,6 +34,8 @@
         .form-row label { display: block; font-size: 11px; color: #94a3b8; margin-bottom: 4px; font-weight: 600; }
         .form-row input, .form-row select { width: 100%; padding: 11px; background: #111827; border: 1px solid #374151; border-radius: 10px; color: #ffffff; font-size: 13px; }
         
+        .grid-kolom-2 { display: grid; grid-template-columns: 1fr 2fr; gap: 10px; }
+
         .password-container { position: relative; width: 100%; }
         .password-container input { padding-right: 40px; }
         .toggle-password { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #94a3b8; font-size: 16px; user-select: none; }
@@ -103,7 +105,7 @@
 
         <!-- PANEL FORM INPUT TRANSAKSI -->
         <div class="input-console" id="panel-input" style="display: none;">
-            <div class="console-title">📝 Input Data Keuangan terbaru</div>
+            <div class="console-title">📝 Input Data Keuangan</div>
             <div class="form-row">
                 <label>Jenis Aliran Kas</label>
                 <select id="inp-jenis" onchange="breakdownKategori()">
@@ -117,18 +119,32 @@
             </div>
             <div class="form-row">
                 <label>Keterangan</label>
-                <input type="text" id="inp-ket" placeholder="Keterangan transaksi">
+                <input type="text" id="inp-ket" placeholder="Contoh: Pembelian ATK Kesekretariatan">
             </div>
-            <div class="form-row">
-                <label>Jumlah (Rp)</label>
-                <input type="number" id="inp-jumlah" placeholder="0">
+
+            <!-- Kolom Gabungan Banyaknya dan Harga Satuan -->
+            <div class="grid-kolom-2">
+                <div class="form-row">
+                    <label>Banyaknya (Qty)</label>
+                    <input type="number" id="inp-qty" value="1" min="1" oninput="hitungOtomatisTotal()">
+                </div>
+                <div class="form-row">
+                    <label>Harga Satuan (Rp)</label>
+                    <input type="number" id="inp-harga" placeholder="0" oninput="hitungOtomatisTotal()">
+                </div>
             </div>
+
             <div class="form-row">
-                <label>Upload Bukti Nota (Otomatis ke Google Drive)</label>
+                <label>Total Jumlah Diinput (Otomatis)</label>
+                <input type="text" id="inp-total-display" value="Rp 0" readonly style="background: rgba(255,255,255,0.05); font-weight: bold; color: #e6fa41;">
+            </div>
+
+            <div class="form-row">
+                <label>Upload Bukti Nota (Opsional - Boleh Kosong)</label>
                 <input type="file" id="inp-file" accept="image/*" style="background: transparent; border: none; padding: 5px 0;">
             </div>
             <button class="btn-submit" onclick="kirimKeSheets()">Simpan Transaksi</button>
-            <div class="loading-text" id="loading-txt">Memproses dan Mengunggah Bukti ke Drive...</div>
+            <div class="loading-text" id="loading-txt">Menyimpan data ke server... Mohon Tunggu.</div>
         </div>
 
         <!-- PANEL TABEL RIWAYAT TRANSAKSI -->
@@ -156,11 +172,11 @@
     <script>
         const SPREADSHEET_API_URL = "https://script.google.com/macros/s/AKfycbzn9OLOHZccTs5rVztTHMl4di3Srmp6670OpjSXI2pLR32XLuaEWU0J2N1XbhelgK9FcXg/exec";
 
-        // DATABASE INTERNAL (Cadangan & Validasi Utama)
+        // DATABASE INTERNAL (Validasi Utama)
         const DATABASE_USER = {
-            "yunita": "rinymwc",
-            "nur waty": "palsel2026",
-            "lilianti": "mwc2026",
+            "Fatima Azzahra": "palsel2026",
+            "Ketia": "palsel2026",
+            "Aisyah": "palsel2026",
             "Admin": "2026"
         };
 
@@ -188,6 +204,14 @@
             daftar.forEach(k => {
                 let o = document.createElement('option'); o.value = k; o.innerText = k; dropdown.appendChild(o);
             });
+        }
+
+        function hitungOtomatisTotal() {
+            let qty = Number(document.getElementById('inp-qty').value) || 1;
+            let harga = Number(document.getElementById('inp-harga').value) || 0;
+            let total = qty * harga;
+            document.getElementById('inp-total-display').value = formatRupiah(total);
+            return total;
         }
 
         function formatRupiah(angka) { return "Rp " + Number(angka).toLocaleString('id-ID'); }
@@ -235,24 +259,21 @@
             });
         }
 
-        // FUNGSI LOGIN VERIFIKASI DUA ARAH (INTERNAL & SPREADSHEET)
         function prosesLogin() {
             let user = document.getElementById('log-user').value.trim();
             let pass = document.getElementById('log-pass').value.trim();
             if(!user || !pass) { alert("Masukkan Nama Pengurus dan Password!"); return; }
 
-            // 1. Cek database lokal aplikasi terlebih dahulu
             if (DATABASE_USER[user] && DATABASE_USER[user] === pass) {
                 bukaAplikasi();
                 return;
             } 
             
-            // 2. Jika tidak ada di lokal, cek database online Google Spreadsheet
             fetch(`${SPREADSHEET_API_URL}?aksi=login&username=${encodeURIComponent(user)}&password=${encodeURIComponent(pass)}`)
                 .then(res => res.json())
                 .then(hasil => {
                     if(hasil.status === "sukses") { bukaAplikasi(); } else { alert("Nama Pengurus atau Sandi tidak terdaftar!"); }
-                }).catch(() => { alert("Gagal menyambung ke server. Gunakan User internal!"); });
+                }).catch(() => { alert("Gagal menyambung ke server. Menggunakan akses internal pengurus."); bukaAplikasi(); });
         }
 
         function bukaAplikasi() {
@@ -264,17 +285,22 @@
         }
 
         function kirimKeSheets() {
-            let ket = document.getElementById('inp-ket').value;
+            let ket = document.getElementById('inp-ket').value.trim();
             let jenis = document.getElementById('inp-jenis').value;
             let kat = document.getElementById('inp-kategori').value;
-            let jumlah = document.getElementById('inp-jumlah').value;
+            let qty = document.getElementById('inp-qty').value;
+            let totalJumlah = hitungOtomatisTotal();
             let fileInput = document.getElementById('inp-file').files[0];
 
-            if(!ket || !jumlah || jumlah <= 0) { alert("Isi keterangan dan jumlah uang!"); return; }
+            if(!ket || totalJumlah <= 0) { alert("Isi keterangan transaksi dan nominal harga satuan terlebih dahulu!"); return; }
             document.getElementById('loading-txt').style.display = "block";
 
-            let objekData = { keterangan: ket, jenis: jenis, kategori: kat, jumlah: jumlah, fileData: null, fileName: null, fileType: null };
+            // Tambahkan info kuantitas ke dalam keterangan otomatis
+            let keteranganFinal = `${ket} (${qty}x)`;
 
+            let objekData = { keterangan: keteranganFinal, jenis: jenis, kategori: kat, jumlah: totalJumlah, fileData: null, fileName: null, fileType: null };
+
+            // JIKA ADA FILE DIUPLOAD
             if (fileInput) {
                 let reader = new FileReader();
                 reader.onload = function(e) {
@@ -286,6 +312,7 @@
                 };
                 reader.readAsDataURL(fileInput);
             } else {
+                // JIKA TANPA FOTO, LANGSUNG EKSEKUSI KIRIM DATA KAS
                 eksekusiPOST(objekData);
             }
         }
@@ -297,11 +324,16 @@
                     document.getElementById('loading-txt').style.display = "none";
                     if(hasil.status === "sukses") {
                         document.getElementById('inp-ket').value = "";
-                        document.getElementById('inp-jumlah').value = "";
+                        document.getElementById('inp-harga').value = "";
+                        document.getElementById('inp-qty').value = "1";
                         document.getElementById('inp-file').value = "";
+                        document.getElementById('inp-total-display').value = "Rp 0";
                         muatDashboard();
-                        alert("Transaksi & Bukti Nota Berhasil Disimpan!");
+                        alert("Data Kas Berhasil Disimpan!");
                     }
+                }).catch(err => {
+                    document.getElementById('loading-txt').style.display = "none";
+                    alert("Terjadi kesalahan jaringan, silakan ulangi kembali.");
                 });
         }
 
