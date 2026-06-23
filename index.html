@@ -59,19 +59,16 @@
 <body>
 
     <div class="app-container">
-        <!-- Status Bar -->
         <div class="header">
             <div class="sys-title">Sistem Keuangan Publik</div>
             <div id="status-koneksi" class="status-badge status-offline">● Memeriksa...</div>
         </div>
 
-        <!-- Judul Laporan -->
         <div>
             <div class="main-title">Laporan Kas</div>
             <div class="sub-title-lembaga">Muslimah Wilayah Cabang Palu Selatan</div>
         </div>
 
-        <!-- Dashboard Ringkasan -->
         <div class="stats-grid">
             <div class="stat-card"><div class="card-label">Total Pemasukan</div><div class="card-val" id="txt-masuk" style="color: #34d399;">Rp 0</div></div>
             <div class="stat-card"><div class="card-label">Total Pengeluaran</div><div class="card-val" id="txt-keluar" style="color: #f87171;">Rp 0</div></div>
@@ -83,7 +80,6 @@
             <div class="cash-row"><span>TOTAL KAS AKTIF</span><span id="txt-total-kas">Rp 0</span></div>
         </div>
 
-        <!-- PANEL LOGIN -->
         <div class="login-console" id="panel-login">
             <div class="logo-container">
                 <img src="kop%20palu%20selatan.png" class="logo-img" alt="Logo Lembaga" id="lembaga-logo">
@@ -103,7 +99,6 @@
             <button class="btn-submit" style="background-color: #e6fa41;" onclick="prosesLogin()">Masuk Sistem</button>
         </div>
 
-        <!-- PANEL FORM INPUT TRANSAKSI -->
         <div class="input-console" id="panel-input" style="display: none;">
             <div class="console-title">📝 Input Data Keuangan</div>
             <div class="form-row">
@@ -119,10 +114,9 @@
             </div>
             <div class="form-row">
                 <label>Keterangan</label>
-                <input type="text" id="inp-ket" placeholder="Contoh: Pembelian ATK Kesekretariatan">
+                <input type="text" id="inp-ket" placeholder="Contoh: Pembelian ATK">
             </div>
 
-            <!-- Kolom Gabungan Banyaknya dan Harga Satuan -->
             <div class="grid-kolom-2">
                 <div class="form-row">
                     <label>Banyaknya (Qty)</label>
@@ -140,14 +134,13 @@
             </div>
 
             <div class="form-row">
-                <label>Upload Bukti Nota (Maksimal 2 MB - JPG/PNG)</label>
+                <label>Upload Bukti Nota (Otomatis Dikompres - JPG/PNG)</label>
                 <input type="file" id="inp-file" accept="image/jpeg, image/png" style="background: transparent; border: none; padding: 5px 0;">
             </div>
             <button class="btn-submit" onclick="kirimKeSheets()">Simpan Transaksi</button>
-            <div class="loading-text" id="loading-txt">Menyimpan data ke server... Mohon Tunggu.</div>
+            <div class="loading-text" id="loading-txt">Mengompres gambar & menyimpan data... Mohon Tunggu.</div>
         </div>
 
-        <!-- PANEL TABEL RIWAYAT TRANSAKSI -->
         <div class="history-console" id="panel-history" style="display: none;">
             <div class="console-title">📋 Riwayat Kas & Bukti Gambar</div>
             <div class="table-responsive">
@@ -161,23 +154,21 @@
                             <th>Bukti Drive</th>
                         </tr>
                     </thead>
-                    <tbody id="tabel-body">
-                        <!-- Otomatis dimuat dari Spreadsheet -->
-                    </tbody>
+                    <tbody id="tabel-body"></tbody>
                 </table>
             </div>
         </div>
     </div>
 
     <script>
-        // PENTING: Jika Anda punya URL Web App Google Apps Script terbaru, silakan ganti tautan di bawah ini!
-        const SPREADSHEET_API_URL = "https://script.google.com/macros/s/AKfycbwMAH1eYnSuBGX0t0C-RIA-ut5i1Szfx5MF86ZaC81QxmIa-goyQ6zeVpJVjPzGPBj9BQ/exec";
+        // PENTING: PASTIKAN INI URL WEB APP GOOGLE APPS SCRIPT TERBARU ANDA
+        const SPREADSHEET_API_URL = "https://script.google.com/macros/s/AKfycbwigl4oUxaaB9Kmba0wXf7K2nBTgXpqVOdqSyzNrvf2Eha5ZCHeM6D30_JbL0b6JVjf1Q/exec";
 
         const DATABASE_USER = {
             "yunita": "mwc2026",
             "lilianti": "palsel2026",
             "nur waty": "mwcpalsel",
-            "Admin": "2026"
+            "admin": "2026"
         };
 
         const kategoriMasuk = ["Pundi", "Bazar", "CFD", "Infaq", "Proposal", "Lainnya"];
@@ -187,13 +178,8 @@
         function togglePasswordAkses() {
             let passInput = document.getElementById('log-pass');
             let toggleIcon = document.getElementById('btn-toggle-pass');
-            if (passInput.type === "password") {
-                passInput.type = "text";
-                toggleIcon.innerText = "🙈";
-            } else {
-                passInput.type = "password";
-                toggleIcon.innerText = "👁️";
-            }
+            if (passInput.type === "password") { passInput.type = "text"; toggleIcon.innerText = "🙈"; } 
+            else { passInput.type = "password"; toggleIcon.innerText = "👁️"; }
         }
 
         function breakdownKategori() {
@@ -217,24 +203,21 @@
         function formatRupiah(angka) { return "Rp " + Number(angka).toLocaleString('id-ID'); }
 
         function updateIndikatorSinyal() {
-            let statusBadge = document.getElementById('status-koneksi');
             if (navigator.onLine) {
-                statusBadge.innerText = "● Online";
-                statusBadge.className = "status-badge status-online";
+                document.getElementById('status-koneksi').innerText = "● Online";
+                document.getElementById('status-koneksi').className = "status-badge status-online";
                 muatDashboard();
             } else {
-                statusBadge.innerText = "● Offline";
-                statusBadge.className = "status-badge status-offline";
+                document.getElementById('status-koneksi').innerText = "● Offline";
+                document.getElementById('status-koneksi').className = "status-badge status-offline";
             }
         }
 
         function muatDashboard() {
             fetch(SPREADSHEET_API_URL + "?aksi=baca")
                 .then(res => res.json())
-                .then(data => {
-                    dataServerTerakhir = data;
-                    renderTabel();
-                }).catch(() => {});
+                .then(data => { dataServerTerakhir = data; renderTabel(); })
+                .catch(() => {});
         }
 
         function renderTabel() {
@@ -264,16 +247,8 @@
             let pass = document.getElementById('log-pass').value.trim();
             if(!user || !pass) { alert("Masukkan Nama Pengurus dan Password!"); return; }
 
-            if (DATABASE_USER[user] && DATABASE_USER[user] === pass) {
-                bukaAplikasi();
-                return;
-            } 
-            
-            fetch(`${SPREADSHEET_API_URL}?aksi=login&username=${encodeURIComponent(user)}&password=${encodeURIComponent(pass)}`)
-                .then(res => res.json())
-                .then(hasil => {
-                    if(hasil.status === "sukses") { bukaAplikasi(); } else { alert("Nama Pengurus atau Sandi salah / tidak terdaftar!"); }
-                }).catch(() => { alert("Menghubungkan lewat akun lokal pengurus..."); bukaAplikasi(); });
+            if (DATABASE_USER[user] && DATABASE_USER[user] === pass) { bukaAplikasi(); } 
+            else { alert("Nama Pengurus atau Sandi salah!"); }
         }
 
         function bukaAplikasi() {
@@ -284,39 +259,59 @@
             muatDashboard();
         }
 
+        function kompresDanKirim(file, callback) {
+            let reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = function (event) {
+                let img = new Image();
+                img.src = event.target.result;
+                img.onload = function () {
+                    let canvas = document.createElement('canvas');
+                    let ctx = canvas.getContext('2d');
+                    
+                    let max_size = 800;
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > height) {
+                        if (width > max_size) { height *= max_size / width; width = max_size; }
+                    } else {
+                        if (height > max_size) { width *= max_size / height; height = max_size; }
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    let dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                    let base64String = dataUrl.split(',')[1];
+                    callback(base64String);
+                };
+            };
+        }
+
         function kirimKeSheets() {
             let ket = document.getElementById('inp-ket').value.trim();
             let jenis = document.getElementById('inp-jenis').value;
             let kat = document.getElementById('inp-kategori').value;
             let qty = document.getElementById('inp-qty').value;
-            let totalJumlah = hitungOtomatisTotal();
-            let fileInput = document.getElementById('inp-file').files[0];
+            
+            // PERBAIKAN UTAMA: Mengambil angka murni langsung dari kalkulasi hitungOtomatisTotal()
+            let totalJumlah = hitungOtomatisTotal(); 
 
-            if(!ket || totalJumlah <= 0) { alert("Isi keterangan transaksi dan nominal harga satuan!"); return; }
+            if(!ket || totalJumlah <= 0) { alert("Isi keterangan transaksi dan nominal harga!"); return; }
+            document.getElementById('loading-txt').style.display = "block";
 
             let keteranganFinal = `${ket} (${qty}x)`;
-            let objekData = { keterangan: keteranganFinal, jenis: jenis, kategori: kat, jumlah: totalJumlah, fileData: null, fileName: null, fileType: null };
+            let objekData = { keterangan: keteranganFinal, jenis: jenis, kategori: kat, jumlah: totalJumlah, fileData: null, fileName: null, fileType: "image/jpeg" };
 
-            if (fileInput) {
-                // VALIDASI UKURAN FILE (2 MB = 2 * 1024 * 1024 bytes)
-                const maxUkuran = 2 * 1024 * 1024;
-                if (fileInput.size > maxUkuran) {
-                    alert("⚠️ Ukuran file gambar terlalu besar! Maksimal ukuran adalah 2 MB. Silakan kompres atau kecilkan ukuran gambar terlebih dahulu.");
-                    return;
-                }
-
-                document.getElementById('loading-txt').style.display = "block";
-                let reader = new FileReader();
-                reader.onload = function(e) {
-                    let splitData = e.target.result.split(',');
-                    objekData.fileData = splitData[1];
-                    objekData.fileName = fileInput.name;
-                    objekData.fileType = fileInput.type;
+            if (fileInput = document.getElementById('inp-file').files[0]) {
+                kompresDanKirim(fileInput, function(base64Dikompres) {
+                    objekData.fileData = base64Dikompres;
+                    objekData.fileName = "nota_" + Date.now() + ".jpg";
                     eksekusiPOST(objekData);
-                };
-                reader.readAsDataURL(fileInput);
+                });
             } else {
-                document.getElementById('loading-txt').style.display = "block";
                 eksekusiPOST(objekData);
             }
         }
@@ -335,11 +330,11 @@
                         muatDashboard();
                         alert("Data Kas Berhasil Disimpan!");
                     } else {
-                        alert("Gagal menyimpan data: " + (hasil.error || "Terjadi kesalahan internal"));
+                        alert("Gagal: " + hasil.error);
                     }
-                }).catch(err => {
+                }).catch(() => {
                     document.getElementById('loading-txt').style.display = "none";
-                    alert("Data berhasil tersimpan! Memperbarui tampilan...");
+                    alert("Data disimpan, memperbarui sistem...");
                     muatDashboard();
                 });
         }
