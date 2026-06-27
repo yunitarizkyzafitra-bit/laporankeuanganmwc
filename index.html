@@ -28,8 +28,8 @@
         .efficiency { font-size: 48px; font-weight: 300; line-height: 1; }
         .cash-row { display: flex; justify-content: space-between; align-items: center; font-weight: 800; font-size: 15px; margin-top: 12px; border-top: 1px solid rgba(0,0,0,0.1); padding-top: 12px; }
         
-        .input-console, .login-console, .history-console { background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 24px; padding: 18px; }
-        .console-title { font-size: 14px; font-weight: 700; margin-bottom: 14px; color: #a5b4fc; text-transform: uppercase; }
+        .input-console, .login-console, .history-console, .monthly-console { background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 24px; padding: 18px; }
+        .console-title { font-size: 14px; font-weight: 700; margin-bottom: 14px; color: #a5b4fc; text-transform: uppercase; letter-spacing: 0.5px; }
         .form-row { margin-bottom: 12px; position: relative; }
         .form-row label { display: block; font-size: 11px; color: #94a3b8; margin-bottom: 4px; font-weight: 600; }
         .form-row input, .form-row select { width: 100%; padding: 11px; background: #111827; border: 1px solid #374151; border-radius: 10px; color: #ffffff; font-size: 13px; }
@@ -53,6 +53,11 @@
         .badge-jenis { padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; }
         .bg-masuk { background-color: rgba(34,197,94,0.2); color: #4ade80; }
         .bg-keluar { background-color: rgba(239,68,68,0.2); color: #f87171; }
+
+        /* Style Tambahan untuk Tabel Bulanan */
+        .text-masuk-sm { color: #4ade80; font-weight: 600; }
+        .text-keluar-sm { color: #f87171; font-weight: 600; }
+        .text-total-sm { color: #e6fa41; font-weight: 700; }
     </style>
 </head>
 <body>
@@ -102,6 +107,11 @@
         <!-- PANEL FORM INPUT -->
         <div class="input-console" id="panel-input" style="display: none;">
             <div class="console-title">📝 Input Data Keuangan</div>
+            
+            <div class="form-row">
+                <label>Tanggal Transaksi</label>
+                <input type="date" id="inp-tanggal">
+            </div>
             <div class="form-row">
                 <label>Jenis Aliran Kas</label>
                 <select id="inp-jenis" onchange="breakdownKategori()">
@@ -138,6 +148,26 @@
             <div class="loading-text" id="loading-txt">Menyimpan data keuangan ke server... Mohon Tunggu.</div>
         </div>
 
+        <!-- PANEL DASHBOARD BARU: REKAPITULASI BULANAN -->
+        <div class="monthly-console" id="panel-monthly" style="display: none;">
+            <div class="console-title">📊 Rekap Kas Per Bulan (TA 2026)</div>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Bulan</th>
+                            <th>Pemasukan</th>
+                            <th>Pengeluaran</th>
+                            <th>Saldo Bersih</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabel-bulanan-body">
+                        <!-- Data otomatis digenerate oleh JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
         <!-- PANEL TABEL RIWAYAT -->
         <div class="history-console" id="panel-history" style="display: none;">
             <div class="console-title">📋 Riwayat Transaksi Kas</div>
@@ -145,6 +175,7 @@
                 <table>
                     <thead>
                         <tr>
+                            <th>Tanggal</th>
                             <th>Keterangan</th>
                             <th>Kategori</th>
                             <th>Jenis</th>
@@ -158,10 +189,8 @@
     </div>
 
     <script>
-        // TAUTAN INTEGRASI GOOGLE APPS SCRIPT
-        const SPREADSHEET_API_URL = "https://script.google.com/macros/s/AKfycbzO2oEa4XXx1J6fW2zpc3CKM7nTI8crlJ27DLZz_gzqE6GbO_3KAjM0DBL15QV7gLrShA/exec";
+        const SPREADSHEET_API_URL = "https://script.google.com/macros/s/AKfycby4mzzsPPpsRNos0WI_1gx37RJBqyirDTcs6wNkY9ocpa6FvNcL2nQNVHAKaiEisDZb/exec";
 
-        // DATABASE PENGURUS & KATA SANDI MASUK
         const DATABASE_USER = {
             "yunita": "mwc2026",
             "lilianti": "palsel2026",
@@ -169,9 +198,23 @@
             "admin": "2026"
         };
 
+        const namaBulanIndo = [
+            "Januari", "Februari", "Maret", "April", "Mei", "Juni", 
+            "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+        ];
+
         const kategoriMasuk = ["Pundi", "Bazar", "CFD", "Infaq", "Proposal", "Lainnya"];
         const kategoriKeluar = ["Admin Bank", "Bayar sewa tempat", "Transportasi", "Sewa Alat", "Lainnya"];
         let dataServerTerakhir = null;
+
+        function formatTanggalIndo(isoString) {
+            if(!isoString) return "-";
+            try {
+                let d = new Date(isoString);
+                if (isNaN(d.getTime())) return isoString;
+                return d.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            } catch(e) { return isoString; }
+        }
 
         function togglePasswordAkses() {
             let passInput = document.getElementById('log-pass');
@@ -218,7 +261,7 @@
         function muatDashboard() {
             fetch(SPREADSHEET_API_URL + "?aksi=baca")
                 .then(res => res.json())
-                .then(data => { dataServerTerakhir = data; renderTabel(); })
+                .then(data => { dataServerTerakhir = data; renderTabel(); kalkulasiBulanan(); })
                 .catch(() => {});
         }
 
@@ -227,7 +270,6 @@
             let tbody = document.getElementById('tabel-body');
             tbody.innerHTML = "";
 
-            // PARSING AMAN (ANTI-NaN): Jika data text/null, paksa ke angka 0
             let totalMasuk = Number(dataServerTerakhir.total_masuk) || 0;
             let totalKeluar = Number(dataServerTerakhir.total_keluar) || 0;
 
@@ -240,7 +282,6 @@
             let persen = totalMasuk > 0 ? Math.round((totalKas / totalMasuk) * 100) : 0;
             document.getElementById('txt-persen').innerText = persen + "%";
 
-            // Render riwayat baris data transaksi
             if (dataServerTerakhir.riwayat && Array.isArray(dataServerTerakhir.riwayat)) {
                 dataServerTerakhir.riwayat.forEach(row => {
                     let tr = document.createElement('tr');
@@ -248,13 +289,59 @@
                     let badgeClass = jenisClean === "Masuk" ? "badge-jenis bg-masuk" : "badge-jenis bg-keluar";
                     let nominalRow = Number(row.jumlah) || 0;
 
-                    tr.innerHTML = `<td>${row.keterangan || '-'}</td>
+                    tr.innerHTML = `<td>${formatTanggalIndo(row.tanggal)}</td>
+                                    <td>${row.keterangan || '-'}</td>
                                     <td>${row.kategori || '-'}</td>
                                     <td><span class="${badgeClass}">${jenisClean}</span></td>
                                     <td>${formatRupiah(nominalRow)}</td>`;
                     tbody.appendChild(tr);
                 });
             }
+        }
+
+        // FUNGSI LOGIKA BARU: OLAh DATA TIAP BULAN SECARA DINAMIS
+        function kalkulasiBulanan() {
+            if (!dataServerTerakhir || !dataServerTerakhir.riwayat) return;
+            
+            // Siapkan wadah kosong untuk 12 bulan
+            let rekapBulan = [];
+            for (let m = 0; m < 12; m++) {
+                rekapBulan.push({ masuk: 0, keluar: 0 });
+            }
+
+            // Kelompokkan data dari riwayat ke masing-masing index bulan
+            dataServerTerakhir.riwayat.forEach(item => {
+                if (item.tanggal) {
+                    let d = new Date(item.tanggal);
+                    if (!isNaN(d.getTime())) {
+                        let indexBulan = d.getMonth(); // Mengembalikan nilai 0 (Jan) sampai 11 (Des)
+                        let nominal = Number(item.jumlah) || 0;
+                        
+                        if (item.jenis === "Masuk") {
+                            rekapBulan[indexBulan].masuk += nominal;
+                        } else if (item.jenis === "Keluar") {
+                            rekapBulan[indexBulan].keluar += nominal;
+                        }
+                    }
+                }
+            });
+
+            // Tampilkan ke tabel dashboard bulanan
+            let tBulananBody = document.getElementById('tabel-bulanan-body');
+            tBulananBody.innerHTML = "";
+
+            rekapBulan.forEach((dataM, idx) => {
+                // Hanya tampilkan bulan jika ada transaksi berjalan, atau jika ingin tampil semua biarkan saja
+                // Agar laporan rapi, kita tampilkan seluruh 12 bulan anggaran
+                let saldoBersih = dataM.masuk - dataM.keluar;
+                let tr = document.createElement('tr');
+                
+                tr.innerHTML = `<td><b>${namaBulanIndo[idx]}</b></td>
+                                <td class="text-masuk-sm">${formatRupiah(dataM.masuk)}</td>
+                                <td class="text-keluar-sm">${formatRupiah(dataM.keluar)}</td>
+                                <td class="text-total-sm">${formatRupiah(saldoBersih)}</td>`;
+                tBulananBody.appendChild(tr);
+            });
         }
 
         function prosesLogin() {
@@ -269,23 +356,37 @@
         function bukaAplikasi() {
             document.getElementById('panel-login').style.display = "none";
             document.getElementById('panel-input').style.display = "block";
+            document.getElementById('panel-monthly').style.display = "block"; // Aktifkan panel bulanan
             document.getElementById('panel-history').style.display = "block";
+            
+            let hariIni = new Date().toISOString().split('T')[0];
+            document.getElementById('inp-tanggal').value = hariIni;
+
             breakdownKategori();
             muatDashboard();
         }
 
         function kirimKeSheets() {
+            let tgl = document.getElementById('inp-tanggal').value;
             let ket = document.getElementById('inp-ket').value.trim();
             let jenis = document.getElementById('inp-jenis').value;
             let kat = document.getElementById('inp-kategori').value;
             let qty = document.getElementById('inp-qty').value;
             let totalJumlah = hitungOtomatisTotal(); 
 
+            if(!tgl) { alert("Silakan pilih tanggal transaksi terlebih dahulu!"); return; }
             if(!ket || totalJumlah <= 0) { alert("Isi keterangan transaksi dan nominal harga dengan benar!"); return; }
+            
             document.getElementById('loading-txt').style.display = "block";
-
             let keteranganFinal = `${ket} (${qty}x)`;
-            let objekData = { keterangan: keteranganFinal, jenis: jenis, kategori: kat, jumlah: totalJumlah, fileData: null, fileName: null };
+            
+            let objekData = { 
+                tanggal: tgl,
+                keterangan: keteranganFinal, 
+                jenis: jenis, 
+                kategori: kat, 
+                jumlah: totalJumlah 
+            };
 
             eksekusiPOST(objekData);
         }
@@ -302,9 +403,7 @@
                         document.getElementById('inp-total-display').value = "Rp 0";
                         muatDashboard();
                         alert("Data Kas Berhasil Disimpan!");
-                    } else {
-                        alert("Gagal menyimpan: " + hasil.error);
-                    }
+                    } else { alert("Gagal menyimpan: " + hasil.error); }
                 }).catch(() => {
                     document.getElementById('loading-txt').style.display = "none";
                     alert("Data berhasil diproses! Memperbarui tampilan...");
