@@ -4,6 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Laporan Kas Terintegrasi - Muslimah Palu Selatan</title>
+    
+    <!-- KODE KUNCI INSTALASI APLIKASI DI LAYAR DEPAN HP -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1a233a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Kas Palsel 2026">
+
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: '-apple-system', BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
         body { background-color: #0b0f19; color: #ffffff; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 10px; }
@@ -54,10 +61,11 @@
         .bg-masuk { background-color: rgba(34,197,94,0.2); color: #4ade80; }
         .bg-keluar { background-color: rgba(239,68,68,0.2); color: #f87171; }
 
-        /* Style Tambahan untuk Tabel Bulanan */
         .text-masuk-sm { color: #4ade80; font-weight: 600; }
         .text-keluar-sm { color: #f87171; font-weight: 600; }
         .text-total-sm { color: #e6fa41; font-weight: 700; }
+        
+        .sync-alert { background-color: #f59e0b; color: #000000; padding: 10px; border-radius: 12px; font-size: 12px; font-weight: bold; text-align: center; display: none; }
     </style>
 </head>
 <body>
@@ -67,6 +75,8 @@
             <div class="sys-title">Sistem Keuangan Publik</div>
             <div id="status-koneksi" class="status-badge status-offline">● Memeriksa...</div>
         </div>
+
+        <div id="notif-offline-sync" class="sync-alert">⚠️ Menunggu Internet untuk Sinkronisasi Data...</div>
 
         <div>
             <div class="main-title">Laporan Kas</div>
@@ -145,10 +155,10 @@
             </div>
 
             <button class="btn-submit" onclick="kirimKeSheets()">Simpan Transaksi</button>
-            <div class="loading-text" id="loading-txt">Menyimpan data keuangan ke server... Mohon Tunggu.</div>
+            <div class="loading-text" id="loading-txt">Menyimpan data keuangan... Mohon Tunggu.</div>
         </div>
 
-        <!-- PANEL DASHBOARD BARU: REKAPITULASI BULANAN -->
+        <!-- PANEL DASHBOARD REKAPITULASI BULANAN -->
         <div class="monthly-console" id="panel-monthly" style="display: none;">
             <div class="console-title">📊 Rekap Kas Per Bulan (TA 2026)</div>
             <div class="table-responsive">
@@ -158,12 +168,10 @@
                             <th>Bulan</th>
                             <th>Pemasukan</th>
                             <th>Pengeluaran</th>
-                            <th>Saldo Bersih</th>
+                            <th>Saldo</th>
                         </tr>
                     </thead>
-                    <tbody id="tabel-bulanan-body">
-                        <!-- Data otomatis digenerate oleh JavaScript -->
-                    </tbody>
+                    <tbody id="tabel-bulanan-body"></tbody>
                 </table>
             </div>
         </div>
@@ -189,7 +197,8 @@
     </div>
 
     <script>
-        const SPREADSHEET_API_URL = "https://script.google.com/macros/s/AKfycbwCnPAqb3yu3yy1CYu7GIfjr-5fWmw58Wb-u7m0S8eo9_eONvW0YRLAu2etD4n2QFbT/exec";
+        // PASTIKAN URL DI BAWAH INI SESUAI DENGAN URL GOOGLE APPS SCRIPT ANDA YANG BARU
+        const SPREADSHEET_API_URL = "https://script.google.com/macros/s/AKfycbzn9OLOHZccTs5rVztTHMl4di3Srmp6670OpjSXI2pLR32XLuaEWU0J2N1XbhelgK9FcXg/exec";
 
         const DATABASE_USER = {
             "yunita": "mwc2026",
@@ -198,13 +207,10 @@
             "admin": "2026"
         };
 
-        const namaBulanIndo = [
-            "Januari", "Februari", "Maret", "April", "Mei", "Juni", 
-            "Juli", "Agustus", "September", "Oktober", "November", "Desember"
-        ];
-
+        const namaBulanIndo = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
         const kategoriMasuk = ["Pundi", "Bazar", "CFD", "Infaq", "Proposal", "Lainnya"];
         const kategoriKeluar = ["Admin Bank", "Bayar sewa tempat", "Transportasi", "Sewa Alat", "Lainnya"];
+        
         let dataServerTerakhir = null;
 
         function formatTanggalIndo(isoString) {
@@ -248,20 +254,37 @@
         }
 
         function updateIndikatorSinyal() {
+            let bannerOffline = document.getElementById('notif-offline-sync');
             if (navigator.onLine) {
                 document.getElementById('status-koneksi').innerText = "● Online";
                 document.getElementById('status-koneksi').className = "status-badge status-online";
+                bannerOffline.style.display = "none";
+                sinkronisasiDataOffline();
                 muatDashboard();
             } else {
-                document.getElementById('status-koneksi').innerText = "● Offline";
+                document.getElementById('status-koneksi').innerText = "● Offline (Lokal)";
                 document.getElementById('status-koneksi').className = "status-badge status-offline";
+                
+                let localData = localStorage.getItem('cache_data_kas');
+                if (localData) {
+                    dataServerTerakhir = JSON.parse(localData);
+                    renderTabel();
+                    kalkulasiBulanan();
+                }
+                cekAntreanOffline();
             }
         }
 
         function muatDashboard() {
+            if (!navigator.onLine) return;
             fetch(SPREADSHEET_API_URL + "?aksi=baca")
                 .then(res => res.json())
-                .then(data => { dataServerTerakhir = data; renderTabel(); kalkulasiBulanan(); })
+                .then(data => { 
+                    dataServerTerakhir = data; 
+                    localStorage.setItem('cache_data_kas', JSON.stringify(data));
+                    renderTabel(); 
+                    kalkulasiBulanan(); 
+                })
                 .catch(() => {});
         }
 
@@ -299,43 +322,28 @@
             }
         }
 
-        // FUNGSI LOGIKA BARU: OLAh DATA TIAP BULAN SECARA DINAMIS
         function kalkulasiBulanan() {
             if (!dataServerTerakhir || !dataServerTerakhir.riwayat) return;
-            
-            // Siapkan wadah kosong untuk 12 bulan
-            let rekapBulan = [];
-            for (let m = 0; m < 12; m++) {
-                rekapBulan.push({ masuk: 0, keluar: 0 });
-            }
+            let rekapBulan = Array.from({ length: 12 }, () => ({ masuk: 0, keluar: 0 }));
 
-            // Kelompokkan data dari riwayat ke masing-masing index bulan
             dataServerTerakhir.riwayat.forEach(item => {
                 if (item.tanggal) {
                     let d = new Date(item.tanggal);
                     if (!isNaN(d.getTime())) {
-                        let indexBulan = d.getMonth(); // Mengembalikan nilai 0 (Jan) sampai 11 (Des)
+                        let indexBulan = d.getMonth();
                         let nominal = Number(item.jumlah) || 0;
-                        
-                        if (item.jenis === "Masuk") {
-                            rekapBulan[indexBulan].masuk += nominal;
-                        } else if (item.jenis === "Keluar") {
-                            rekapBulan[indexBulan].keluar += nominal;
-                        }
+                        if (item.jenis === "Masuk") rekapBulan[indexBulan].masuk += nominal;
+                        else if (item.jenis === "Keluar") rekapBulan[indexBulan].keluar += nominal;
                     }
                 }
             });
 
-            // Tampilkan ke tabel dashboard bulanan
             let tBulananBody = document.getElementById('tabel-bulanan-body');
             tBulananBody.innerHTML = "";
 
             rekapBulan.forEach((dataM, idx) => {
-                // Hanya tampilkan bulan jika ada transaksi berjalan, atau jika ingin tampil semua biarkan saja
-                // Agar laporan rapi, kita tampilkan seluruh 12 bulan anggaran
                 let saldoBersih = dataM.masuk - dataM.keluar;
                 let tr = document.createElement('tr');
-                
                 tr.innerHTML = `<td><b>${namaBulanIndo[idx]}</b></td>
                                 <td class="text-masuk-sm">${formatRupiah(dataM.masuk)}</td>
                                 <td class="text-keluar-sm">${formatRupiah(dataM.keluar)}</td>
@@ -356,14 +364,12 @@
         function bukaAplikasi() {
             document.getElementById('panel-login').style.display = "none";
             document.getElementById('panel-input').style.display = "block";
-            document.getElementById('panel-monthly').style.display = "block"; // Aktifkan panel bulanan
+            document.getElementById('panel-monthly').style.display = "block";
             document.getElementById('panel-history').style.display = "block";
             
-            let hariIni = new Date().toISOString().split('T')[0];
-            document.getElementById('inp-tanggal').value = hariIni;
-
+            document.getElementById('inp-tanggal').value = new Date().toISOString().split('T')[0];
             breakdownKategori();
-            muatDashboard();
+            updateIndikatorSinyal();
         }
 
         function kirimKeSheets() {
@@ -374,21 +380,23 @@
             let qty = document.getElementById('inp-qty').value;
             let totalJumlah = hitungOtomatisTotal(); 
 
-            if(!tgl) { alert("Silakan pilih tanggal transaksi terlebih dahulu!"); return; }
-            if(!ket || totalJumlah <= 0) { alert("Isi keterangan transaksi dan nominal harga dengan benar!"); return; }
-            
-            document.getElementById('loading-txt').style.display = "block";
-            let keteranganFinal = `${ket} (${qty}x)`;
+            if(!tgl) { alert("Silakan pilih tanggal transaksi!"); return; }
+            if(!ket || totalJumlah <= 0) { alert("Isi keterangan dan nominal dengan benar!"); return; }
             
             let objekData = { 
                 tanggal: tgl,
-                keterangan: keteranganFinal, 
+                keterangan: `${ket} (${qty}x)`, 
                 jenis: jenis, 
                 kategori: kat, 
                 jumlah: totalJumlah 
             };
 
-            eksekusiPOST(objekData);
+            if (navigator.onLine) {
+                document.getElementById('loading-txt').style.display = "block";
+                eksekusiPOST(objekData);
+            } else {
+                simpanKeAntreanOffline(objekData);
+            }
         }
 
         function eksekusiPOST(data) {
@@ -397,21 +405,84 @@
                 .then(hasil => {
                     document.getElementById('loading-txt').style.display = "none";
                     if(hasil.status === "sukses") {
-                        document.getElementById('inp-ket').value = "";
-                        document.getElementById('inp-harga').value = "";
-                        document.getElementById('inp-qty').value = "1";
-                        document.getElementById('inp-total-display').value = "Rp 0";
+                        bersihkanForm();
                         muatDashboard();
                         alert("Data Kas Berhasil Disimpan!");
-                    } else { alert("Gagal menyimpan: " + hasil.error); }
+                    }
                 }).catch(() => {
                     document.getElementById('loading-txt').style.display = "none";
-                    alert("Data berhasil diproses! Memperbarui tampilan...");
+                    bersihkanForm();
                     muatDashboard();
                 });
         }
 
+        function bersihkanForm() {
+            document.getElementById('inp-ket').value = "";
+            document.getElementById('inp-harga').value = "";
+            document.getElementById('inp-qty').value = "1";
+            document.getElementById('inp-total-display').value = "Rp 0";
+        }
+
+        function simpanKeAntreanOffline(data) {
+            let antrean = JSON.parse(localStorage.getItem('antrean_offline_kas')) || [];
+            antrean.push(data);
+            localStorage.setItem('antrean_offline_kas', JSON.stringify(antrean));
+            
+            if (dataServerTerakhir) {
+                dataServerTerakhir.riwayat.unshift(data);
+                if (data.jenis === "Masuk") dataServerTerakhir.total_masuk += data.jumlah;
+                else dataServerTerakhir.total_keluar += data.jumlah;
+                renderTabel();
+                kalkulasiBulanan();
+            }
+
+            bersihkanForm();
+            cekAntreanOffline();
+            alert("⚠️ HP Anda OFFLINE. Data sukses disimpan sementara di HP.");
+        }
+
+        function cekAntreanOffline() {
+            let antrean = JSON.parse(localStorage.getItem('antrean_offline_kas')) || [];
+            let bannerOffline = document.getElementById('notif-offline-sync');
+            if (antrean.length > 0) {
+                bannerOffline.innerText = `⚠️ Terdeteksi ${antrean.length} Data Menunggu Internet...`;
+                bannerOffline.style.display = "block";
+            } else if (!navigator.onLine) {
+                bannerOffline.innerText = "Mode Offline Aktif (Aman Digunakan)";
+                bannerOffline.style.display = "block";
+            }
+        }
+
+        function sinkronisasiDataOffline() {
+            let antrean = JSON.parse(localStorage.getItem('antrean_offline_kas')) || [];
+            if (antrean.length === 0) return;
+
+            document.getElementById('notif-offline-sync').innerText = "🔄 Sinkronisasi Data Offline ke Google Sheets...";
+            document.getElementById('notif-offline-sync').style.display = "block";
+
+            let janjiKirim = antrean.map(data => {
+                return fetch(SPREADSHEET_API_URL, { method: "POST", body: JSON.stringify(data) }).then(res => res.json());
+            });
+
+            Promise.all(janjiKirim)
+                .then(() => {
+                    localStorage.removeItem('antrean_offline_kas');
+                    document.getElementById('notif-offline-sync').style.display = "none";
+                    muatDashboard();
+                    alert("🚀 Semua data input offline Anda telah sukses disinkronkan ke Google Sheets!");
+                })
+                .catch(() => { cekAntreanOffline(); });
+        }
+
+        if ("serviceWorker" in navigator) {
+            window.addEventListener("load", () => {
+                navigator.serviceWorker.register("./sw.js").then(() => console.log("PWA Aktif!")).catch(() => console.log("Gagal"));
+            });
+        }
+
         window.onload = () => { updateIndikatorSinyal(); };
+        window.addEventListener("online", updateIndikatorSinyal);
+        window.addEventListener("offline", updateIndikatorSinyal);
     </script>
 </body>
 </html>
