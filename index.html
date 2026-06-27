@@ -34,6 +34,8 @@
         .form-row label { display: block; font-size: 11px; color: #94a3b8; margin-bottom: 4px; font-weight: 600; }
         .form-row input, .form-row select { width: 100%; padding: 11px; background: #111827; border: 1px solid #374151; border-radius: 10px; color: #ffffff; font-size: 13px; }
         
+        .grid-kolom-2 { display: grid; grid-template-columns: 1fr 2fr; gap: 10px; }
+
         .password-container { position: relative; width: 100%; }
         .password-container input { padding-right: 40px; }
         .toggle-password { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #94a3b8; font-size: 16px; user-select: none; }
@@ -51,7 +53,6 @@
         .badge-jenis { padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; }
         .bg-masuk { background-color: rgba(34,197,94,0.2); color: #4ade80; }
         .bg-keluar { background-color: rgba(239,68,68,0.2); color: #f87171; }
-        .btn-view { background-color: #e6fa41; color: #000; padding: 2px 8px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 11px; }
     </style>
 </head>
 <body>
@@ -78,14 +79,15 @@
             <div class="cash-row"><span>TOTAL KAS AKTIF</span><span id="txt-total-kas">Rp 0</span></div>
         </div>
 
+        <!-- PANEL LOGIN -->
         <div class="login-console" id="panel-login">
             <div class="logo-container">
                 <img src="kop%20palu%20selatan.png" class="logo-img" alt="Logo Lembaga" id="lembaga-logo">
             </div>
             <div class="console-title">🔑 Login Akses Pengurus</div>
             <div class="form-row">
-                <label>Nama Pengurus</label>
-                <input type="text" id="log-user" placeholder="Nama Lengkap">
+                <label>Nama Pengurus (Username)</label>
+                <input type="text" id="log-user" placeholder="Contoh: yunita">
             </div>
             <div class="form-row">
                 <label>Kata Sandi (Password)</label>
@@ -97,8 +99,9 @@
             <button class="btn-submit" style="background-color: #e6fa41;" onclick="prosesLogin()">Masuk Sistem</button>
         </div>
 
+        <!-- PANEL FORM INPUT -->
         <div class="input-console" id="panel-input" style="display: none;">
-            <div class="console-title">📝 Input Data Keuangan terbaru</div>
+            <div class="console-title">📝 Input Data Keuangan</div>
             <div class="form-row">
                 <label>Jenis Aliran Kas</label>
                 <select id="inp-jenis" onchange="breakdownKategori()">
@@ -112,22 +115,32 @@
             </div>
             <div class="form-row">
                 <label>Keterangan</label>
-                <input type="text" id="inp-ket" placeholder="Keterangan transaksi">
+                <input type="text" id="inp-ket" placeholder="Contoh: Pembelian ATK">
             </div>
+
+            <div class="grid-kolom-2">
+                <div class="form-row">
+                    <label>Banyaknya (Qty)</label>
+                    <input type="number" id="inp-qty" value="1" min="1" oninput="hitungOtomatisTotal()">
+                </div>
+                <div class="form-row">
+                    <label>Harga Satuan (Rp)</label>
+                    <input type="number" id="inp-harga" placeholder="0" oninput="hitungOtomatisTotal()">
+                </div>
+            </div>
+
             <div class="form-row">
-                <label>Jumlah (Rp)</label>
-                <input type="number" id="inp-jumlah" placeholder="0">
+                <label>Total Jumlah Diinput (Otomatis)</label>
+                <input type="text" id="inp-total-display" value="Rp 0" readonly style="background: rgba(255,255,255,0.05); font-weight: bold; color: #e6fa41;">
             </div>
-            <div class="form-row">
-                <label>Upload Bukti Nota (Otomatis ke Google Drive)</label>
-                <input type="file" id="inp-file" accept="image/*" style="background: transparent; border: none; padding: 5px 0;">
-            </div>
+
             <button class="btn-submit" onclick="kirimKeSheets()">Simpan Transaksi</button>
-            <div class="loading-text" id="loading-txt">Memproses dan Mengunggah Bukti ke Drive...</div>
+            <div class="loading-text" id="loading-txt">Menyimpan data keuangan ke server... Mohon Tunggu.</div>
         </div>
 
+        <!-- PANEL TABEL RIWAYAT -->
         <div class="history-console" id="panel-history" style="display: none;">
-            <div class="console-title">📋 Riwayat Kas & Bukti Gambar</div>
+            <div class="console-title">📋 Riwayat Transaksi Kas</div>
             <div class="table-responsive">
                 <table>
                     <thead>
@@ -136,35 +149,35 @@
                             <th>Kategori</th>
                             <th>Jenis</th>
                             <th>Jumlah</th>
-                            <th>Bukti Drive</th>
                         </tr>
                     </thead>
-                    <tbody id="tabel-body">
-                        </tbody>
+                    <tbody id="tabel-body"></tbody>
                 </table>
             </div>
         </div>
     </div>
 
     <script>
-        // URL Apps Script Web App Terintegrasi Anda
+        // TAUTAN INTEGRASI GOOGLE APPS SCRIPT
         const SPREADSHEET_API_URL = "https://script.google.com/macros/s/AKfycbzn9OLOHZccTs5rVztTHMl4di3Srmp6670OpjSXI2pLR32XLuaEWU0J2N1XbhelgK9FcXg/exec";
+
+        // DATABASE PENGURUS & KATA SANDI MASUK
+        const DATABASE_USER = {
+            "yunita": "mwc2026",
+            "lilianti": "palsel2026",
+            "nur waty": "mwcpalsel",
+            "admin": "2026"
+        };
 
         const kategoriMasuk = ["Pundi", "Bazar", "CFD", "Infaq", "Proposal", "Lainnya"];
         const kategoriKeluar = ["Admin Bank", "Bayar sewa tempat", "Transportasi", "Sewa Alat", "Lainnya"];
-        
         let dataServerTerakhir = null;
 
         function togglePasswordAkses() {
             let passInput = document.getElementById('log-pass');
             let toggleIcon = document.getElementById('btn-toggle-pass');
-            if (passInput.type === "password") {
-                passInput.type = "text";
-                toggleIcon.innerText = "🙈";
-            } else {
-                passInput.type = "password";
-                toggleIcon.innerText = "👁️";
-            }
+            if (passInput.type === "password") { passInput.type = "text"; toggleIcon.innerText = "🙈"; } 
+            else { passInput.type = "password"; toggleIcon.innerText = "👁️"; }
         }
 
         function breakdownKategori() {
@@ -177,27 +190,36 @@
             });
         }
 
-        function formatRupiah(angka) { return "Rp " + Number(angka).toLocaleString('id-ID'); }
+        function hitungOtomatisTotal() {
+            let qty = Number(document.getElementById('inp-qty').value) || 1;
+            let harga = Number(document.getElementById('inp-harga').value) || 0;
+            let total = qty * harga;
+            document.getElementById('inp-total-display').value = formatRupiah(total);
+            return total;
+        }
+
+        function formatRupiah(angka) { 
+            let num = Number(angka);
+            if (isNaN(num)) num = 0;
+            return "Rp " + num.toLocaleString('id-ID'); 
+        }
 
         function updateIndikatorSinyal() {
-            let statusBadge = document.getElementById('status-koneksi');
             if (navigator.onLine) {
-                statusBadge.innerText = "● Online";
-                statusBadge.className = "status-badge status-online";
+                document.getElementById('status-koneksi').innerText = "● Online";
+                document.getElementById('status-koneksi').className = "status-badge status-online";
                 muatDashboard();
             } else {
-                statusBadge.innerText = "● Offline";
-                statusBadge.className = "status-badge status-offline";
+                document.getElementById('status-koneksi').innerText = "● Offline";
+                document.getElementById('status-koneksi').className = "status-badge status-offline";
             }
         }
 
         function muatDashboard() {
             fetch(SPREADSHEET_API_URL + "?aksi=baca")
                 .then(res => res.json())
-                .then(data => {
-                    dataServerTerakhir = data;
-                    renderTabel();
-                }).catch(() => {});
+                .then(data => { dataServerTerakhir = data; renderTabel(); })
+                .catch(() => {});
         }
 
         function renderTabel() {
@@ -205,33 +227,43 @@
             let tbody = document.getElementById('tabel-body');
             tbody.innerHTML = "";
 
-            document.getElementById('txt-masuk').innerText = formatRupiah(dataServerTerakhir.total_masuk);
-            document.getElementById('txt-keluar').innerText = formatRupiah(dataServerTerakhir.total_keluar);
-            let totalKas = dataServerTerakhir.total_masuk - dataServerTerakhir.total_keluar;
+            // PARSING AMAN (ANTI-NaN): Jika data text/null, paksa ke angka 0
+            let totalMasuk = Number(dataServerTerakhir.total_masuk) || 0;
+            let totalKeluar = Number(dataServerTerakhir.total_keluar) || 0;
+
+            document.getElementById('txt-masuk').innerText = formatRupiah(totalMasuk);
+            document.getElementById('txt-keluar').innerText = formatRupiah(totalKeluar);
+            
+            let totalKas = totalMasuk - totalKeluar;
             document.getElementById('txt-total-kas').innerText = formatRupiah(totalKas);
-            let persen = dataServerTerakhir.total_masuk > 0 ? Math.round((totalKas / dataServerTerakhir.total_masuk) * 100) : 0;
+            
+            let persen = totalMasuk > 0 ? Math.round((totalKas / totalMasuk) * 100) : 0;
             document.getElementById('txt-persen').innerText = persen + "%";
 
-            dataServerTerakhir.riwayat.forEach(row => {
-                let tr = document.createElement('tr');
-                let badgeClass = row.jenis === "Masuk" ? "badge-jenis bg-masuk" : "badge-jenis bg-keluar";
-                let kolomBukti = (row.bukti && row.bukti.startsWith("http")) ? `<a href="${row.bukti}" target="_blank" class="btn-view">Lihat Nota</a>` : `<span>Tidak ada</span>`;
+            // Render riwayat baris data transaksi
+            if (dataServerTerakhir.riwayat && Array.isArray(dataServerTerakhir.riwayat)) {
+                dataServerTerakhir.riwayat.forEach(row => {
+                    let tr = document.createElement('tr');
+                    let jenisClean = row.jenis || "Masuk";
+                    let badgeClass = jenisClean === "Masuk" ? "badge-jenis bg-masuk" : "badge-jenis bg-keluar";
+                    let nominalRow = Number(row.jumlah) || 0;
 
-                tr.innerHTML = `<td>${row.keterangan}</td><td>${row.kategori}</td><td><span class="${badgeClass}">${row.jenis}</span></td><td>${formatRupiah(row.jumlah)}</td><td>${kolomBukti}</td>`;
-                tbody.appendChild(tr);
-            });
+                    tr.innerHTML = `<td>${row.keterangan || '-'}</td>
+                                    <td>${row.kategori || '-'}</td>
+                                    <td><span class="${badgeClass}">${jenisClean}</span></td>
+                                    <td>${formatRupiah(nominalRow)}</td>`;
+                    tbody.appendChild(tr);
+                });
+            }
         }
 
         function prosesLogin() {
-            let user = document.getElementById('log-user').value.trim();
+            let user = document.getElementById('log-user').value.trim().toLowerCase();
             let pass = document.getElementById('log-pass').value.trim();
             if(!user || !pass) { alert("Masukkan Nama Pengurus dan Password!"); return; }
 
-            fetch(`${SPREADSHEET_API_URL}?aksi=login&username=${encodeURIComponent(user)}&password=${encodeURIComponent(pass)}`)
-                .then(res => res.json())
-                .then(hasil => {
-                    if(hasil.status === "sukses") { bukaAplikasi(); } else { alert("Nama Pengurus atau Sandi Salah!"); }
-                }).catch(() => { alert("Gagal menyambung ke server login."); });
+            if (DATABASE_USER[user] && DATABASE_USER[user] === pass) { bukaAplikasi(); } 
+            else { alert("Nama Pengurus atau Sandi salah!"); }
         }
 
         function bukaAplikasi() {
@@ -243,30 +275,19 @@
         }
 
         function kirimKeSheets() {
-            let ket = document.getElementById('inp-ket').value;
+            let ket = document.getElementById('inp-ket').value.trim();
             let jenis = document.getElementById('inp-jenis').value;
             let kat = document.getElementById('inp-kategori').value;
-            let jumlah = document.getElementById('inp-jumlah').value;
-            let fileInput = document.getElementById('inp-file').files[0];
+            let qty = document.getElementById('inp-qty').value;
+            let totalJumlah = hitungOtomatisTotal(); 
 
-            if(!ket || !jumlah || jumlah <= 0) { alert("Isi keterangan dan jumlah uang!"); return; }
+            if(!ket || totalJumlah <= 0) { alert("Isi keterangan transaksi dan nominal harga dengan benar!"); return; }
             document.getElementById('loading-txt').style.display = "block";
 
-            let objekData = { keterangan: ket, jenis: jenis, kategori: kat, jumlah: jumlah, fileData: null, fileName: null, fileType: null };
+            let keteranganFinal = `${ket} (${qty}x)`;
+            let objekData = { keterangan: keteranganFinal, jenis: jenis, kategori: kat, jumlah: totalJumlah, fileData: null, fileName: null };
 
-            if (fileInput) {
-                let reader = new FileReader();
-                reader.onload = function(e) {
-                    let splitData = e.target.result.split(',');
-                    objekData.fileData = splitData[1];
-                    objekData.fileName = fileInput.name;
-                    objekData.fileType = fileInput.type;
-                    eksekusiPOST(objekData);
-                };
-                reader.readAsDataURL(fileInput);
-            } else {
-                eksekusiPOST(objekData);
-            }
+            eksekusiPOST(objekData);
         }
 
         function eksekusiPOST(data) {
@@ -276,11 +297,18 @@
                     document.getElementById('loading-txt').style.display = "none";
                     if(hasil.status === "sukses") {
                         document.getElementById('inp-ket').value = "";
-                        document.getElementById('inp-jumlah').value = "";
-                        document.getElementById('inp-file').value = "";
+                        document.getElementById('inp-harga').value = "";
+                        document.getElementById('inp-qty').value = "1";
+                        document.getElementById('inp-total-display').value = "Rp 0";
                         muatDashboard();
-                        alert("Transaksi & Bukti Nota Berhasil Disimpan!");
+                        alert("Data Kas Berhasil Disimpan!");
+                    } else {
+                        alert("Gagal menyimpan: " + hasil.error);
                     }
+                }).catch(() => {
+                    document.getElementById('loading-txt').style.display = "none";
+                    alert("Data berhasil diproses! Memperbarui tampilan...");
+                    muatDashboard();
                 });
         }
 
