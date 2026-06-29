@@ -1,0 +1,16 @@
+{
+  "name": "Laporan Kas Palsel 2026",
+  "short_name": "Kas Palsel 2026",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#0b0f19",
+  "theme_color": "#1a233a",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "kop%20palu%20selatan.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}
