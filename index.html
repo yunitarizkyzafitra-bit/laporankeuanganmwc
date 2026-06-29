@@ -50,6 +50,11 @@
         
         .btn-submit { background-color: #ffffff; color: #000000; width: 100%; border: none; padding: 14px; border-radius: 14px; font-size: 14px; font-weight: 700; cursor: pointer; margin-top: 8px; transition: background 0.2s; }
         .btn-submit:active { background-color: #d1d5db; }
+        
+        /* Tombol Selesai Khusus untuk Lock Out */
+        .btn-selesai { background-color: #ef4444; color: #ffffff; width: 100%; border: none; padding: 12px; border-radius: 14px; font-size: 13px; font-weight: 700; cursor: pointer; margin-top: 15px; border: 1px solid rgba(255,255,255,0.1); }
+        .btn-selesai:active { background-color: #dc2626; }
+        
         .loading-text { display: none; text-align: center; font-size: 12px; color: #e6fa41; margin-top: 10px; font-weight: 600; }
 
         .logo-container { width: 100%; display: flex; justify-content: center; align-items: center; margin-bottom: 15px; background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.1); border-radius: 20px; padding: 15px; min-height: 110px; }
@@ -120,6 +125,12 @@
         <div class="input-console" id="panel-input" style="display: none;">
             <div class="console-title">📝 Input Data Keuangan</div>
             
+            <!-- Informasi Akun Aktif Otomatis -->
+            <div class="form-row">
+                <label>Petugas Penginput (Otomatis)</label>
+                <input type="text" id="inp-petugas-nama" readonly style="background: rgba(255,255,255,0.05); font-weight: bold; color: #a5b4fc;">
+            </div>
+
             <div class="form-row">
                 <label>Tanggal Transaksi</label>
                 <input type="date" id="inp-tanggal">
@@ -158,6 +169,9 @@
 
             <button class="btn-submit" onclick="kirimKeSheets()">Simpan Transaksi</button>
             <div class="loading-text" id="loading-txt">Menyimpan data keuangan... Mohon Tunggu.</div>
+            
+            <!-- Tombol Selesai Keluar Sistem Kembali ke Penguncian -->
+            <button class="btn-selesai" onclick="kunciAplikasiKembali()">🔒 Selesai & Kunci Aplikasi</button>
         </div>
 
         <!-- PANEL DASHBOARD REKAPITULASI BULANAN -->
@@ -190,6 +204,7 @@
                             <th>Kategori</th>
                             <th>Jenis</th>
                             <th>Jumlah</th>
+                            <th>Penginput</th>
                         </tr>
                     </thead>
                     <tbody id="tabel-body"></tbody>
@@ -199,7 +214,7 @@
     </div>
 
     <script>
-        // URL WEB APP GOOGLE APPS SCRIPT YANG SUDAH TERDEPLOY DENGAN AKSES "ANYONE"
+        // URL WEB APP APPS SCRIPT ANDA
         const SPREADSHEET_API_URL = "https://script.google.com/macros/s/AKfycbxGinTqep-qMjFe7QydY4OSXZh2LMetvC3NcAQZTQ7jEFl9UBO4Yy-6pd6rj-LMw8Pw/exec";
 
         const DATABASE_USER = {
@@ -214,6 +229,7 @@
         const kategoriKeluar = ["Admin Bank", "Bayar sewa tempat", "Transportasi", "Sewa Alat", "Lainnya"];
         
         let dataServerTerakhir = null;
+        let namaPengurusAktif = "";
 
         function formatTanggalIndo(isoString) {
             if(!isoString) return "-";
@@ -277,9 +293,11 @@
             }
         }
 
+        // FUNGSI UTAMA: MEMAKSA BROWSER MEMBACA DATA TERBARU DARI SPREADSHEET (MENGATASI DATA KOREKSI TIDAK HILANG)
         function muatDashboard() {
             if (!navigator.onLine) return;
-            fetch(SPREADSHEET_API_URL + "?aksi=baca")
+            // Ditambahkan timestamp acak (?t=...) agar browser HP tidak memakai cache lama dan mendeteksi data yang dihapus di spreadsheet
+            fetch(SPREADSHEET_API_URL + "?aksi=baca&t=" + new Date().getTime())
                 .then(res => res.json())
                 .then(data => { 
                     dataServerTerakhir = data; 
@@ -313,12 +331,14 @@
                     let jenisClean = row.jenis || "Masuk";
                     let badgeClass = jenisClean === "Masuk" ? "badge-jenis bg-masuk" : "badge-jenis bg-keluar";
                     let nominalRow = Number(row.jumlah) || 0;
+                    let penginputData = row.petugas || row.penginput || "-"; // Mengambil kolom nama penginput dari Sheets
 
                     tr.innerHTML = `<td>${formatTanggalIndo(row.tanggal)}</td>
                                     <td>${row.keterangan || '-'}</td>
                                     <td>${row.kategori || '-'}</td>
                                     <td><span class="${badgeClass}">${jenisClean}</span></td>
-                                    <td>${formatRupiah(nominalRow)}</td>`;
+                                    <td>${formatRupiah(nominalRow)}</td>
+                                    <td style="color: #a5b4fc; font-weight: 600;">${penginputData}</td>`;
                     tbody.appendChild(tr);
                 });
             }
@@ -340,18 +360,16 @@
                 }
             });
 
-            let tBulananBody = document.getElementById('tBulananBody');
-            let tBulananTable = document.getElementById('tabel-bulanan-body');
-            let targetBody = tBulananTable || tBulananBody;
+            let targetBody = document.getElementById('tabel-bulanan-body');
             if(targetBody) {
                 targetBody.innerHTML = "";
                 rekapBulan.forEach((dataM, idx) => {
                     let saldoBersih = dataM.masuk - dataM.keluar;
                     let tr = document.createElement('tr');
                     tr.innerHTML = `<td><b>${namaBulanIndo[idx]}</b></td>
-                                    <td class="text-masuk-sm">${formatRupiah(dataM.masuk)}</td>
-                                    <td class="text-keluar-sm">${formatRupiah(dataM.keluar)}</td>
-                                    <td class="text-total-sm">${formatRupiah(saldoBersih)}</td>`;
+                                <td class="text-masuk-sm">${formatRupiah(dataM.masuk)}</td>
+                                <td class="text-keluar-sm">${formatRupiah(dataM.keluar)}</td>
+                                <td class="text-total-sm">${formatRupiah(saldoBersih)}</td>`;
                     targetBody.appendChild(tr);
                 });
             }
@@ -362,8 +380,12 @@
             let pass = document.getElementById('log-pass').value.trim();
             if(!user || !pass) { alert("Masukkan Nama Pengurus dan Password!"); return; }
 
-            if (DATABASE_USER[user] && DATABASE_USER[user] === pass) { bukaAplikasi(); } 
-            else { alert("Nama Pengurus atau Sandi salah!"); }
+            if (DATABASE_USER[user] && DATABASE_USER[user] === pass) { 
+                namaPengurusAktif = user.toUpperCase(); // Menyimpan data siapa yang login
+                bukaAplikasi(); 
+            } else { 
+                alert("Nama Pengurus atau Sandi salah!"); 
+            }
         }
 
         function bukaAplikasi() {
@@ -372,9 +394,29 @@
             document.getElementById('panel-monthly').style.display = "block";
             document.getElementById('panel-history').style.display = "block";
             
+            document.getElementById('inp-petugas-nama').value = namaPengurusAktif;
             document.getElementById('inp-tanggal').value = new Date().toISOString().split('T')[0];
             breakdownKategori();
             updateIndikatorSinyal();
+        }
+
+        // FUNGSI TOMBOL SELESAI: UNTUK MENGEMBALIKAN KE LAYAR PENGUNCIAN AWAL
+        function kunciAplikasiKembali() {
+            if(confirm("Apakah Anda sudah selesai memasukkan data dan ingin mengunci aplikasi kembali?")) {
+                bersihkanForm();
+                namaPengurusAktif = "";
+                document.getElementById('log-user').value = "";
+                document.getElementById('log-pass').value = "";
+                
+                // Sembunyikan panel konsol input dan dashboard
+                document.getElementById('panel-input').style.display = "none";
+                document.getElementById('panel-monthly').style.display = "none";
+                document.getElementById('panel-history').style.display = "none";
+                
+                // Tampilkan kembali layar kunci login utama
+                document.getElementById('panel-login').style.display = "block";
+                window.scrollTo({top: 0, behavior: 'smooth'});
+            }
         }
 
         function kirimKeSheets() {
@@ -388,12 +430,14 @@
             if(!tgl) { alert("Silakan pilih tanggal transaksi!"); return; }
             if(!ket || totalJumlah <= 0) { alert("Isi keterangan dan nominal dengan benar!"); return; }
             
+            // Menyertakan nama petugas ke dalam objek data yang dikirim ke Google Sheets
             let objekData = { 
                 tanggal: tgl,
                 keterangan: `${ket} (${qty}x)`, 
                 jenis: jenis, 
                 kategori: kat, 
-                jumlah: totalJumlah 
+                jumlah: totalJumlah,
+                petugas: namaPengurusAktif
             };
 
             if (navigator.onLine) {
@@ -404,24 +448,22 @@
             }
         }
 
-        // METODE METODE KHUSUS HP AGAR PENGIRIMAN DATA REKAT DAN STABIL
         function eksekusiPOST(data) {
             fetch(SPREADSHEET_API_URL, { 
                 method: "POST", 
-                mode: "no-cors", // Pengaturan wajib agar tidak di-block oleh browser HP
+                mode: "no-cors", 
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(data) 
             })
             .then(() => {
-                // Di HP, mode 'no-cors' tidak mengembalikan data response text, jadi langsung dianggap sukses
                 document.getElementById('loading-txt').style.display = "none";
                 bersihkanForm();
-                setTimeout(muatDashboard, 1500); // Tunggu Google Sheets memproses data sebentar, lalu muat dashboard
+                setTimeout(muatDashboard, 1500); 
                 alert("Data Kas Berhasil Disimpan ke Google Sheets!");
             })
-            .catch((err) => {
+            .catch(() => {
                 document.getElementById('loading-txt').style.display = "none";
-                simpanKeAntreanOffline(data); // Jika gagal terkirim di HP, otomatis amankan data secara offline
+                simpanKeAntreanOffline(data); 
             });
         }
 
@@ -448,7 +490,7 @@
 
             bersihkanForm();
             cekAntreanOffline();
-            alert("⚠️ Sistem HP Mengamankan Data! Transaksi sukses disimpan di memori internal HP dan otomatis terkirim saat internet stabil.");
+            alert("⚠️ HP Anda OFFLINE. Data sukses disimpan sementara di memori internal HP.");
         }
 
         function cekAntreanOffline() {
@@ -479,7 +521,7 @@
                     localStorage.removeItem('antrean_offline_kas');
                     document.getElementById('notif-offline-sync').style.display = "none";
                     setTimeout(muatDashboard, 1000);
-                    alert("🚀 Sinkronisasi Sukses! Seluruh data transaksi dari HP Anda telah berhasil masuk ke Google Sheets.");
+                    alert("🚀 Sinkronisasi Sukses! Seluruh data input offline Anda telah berhasil masuk ke Google Sheets.");
                 })
                 .catch(() => { cekAntreanOffline(); });
         }
